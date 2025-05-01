@@ -36,28 +36,28 @@ export default function TabLayout() {
         name="dashboard"
         options={{
           title: BengaliText.HOME,
-          tabBarIcon: ({ color }) => <Ionicons name="home" size={28} color={color} />,
+          tabBarIcon: ({ color }: { color: string }) => <Ionicons name="home" size={28} color={color} />,
         }}
       />
       <Tabs.Screen
         name="index"
         options={{
           title: "Stats",
-          tabBarIcon: ({ color }) => <Ionicons name="stats-chart" size={28} color={color} />,
+          tabBarIcon: ({ color }: { color: string }) => <Ionicons name="stats-chart" size={28} color={color} />,
         }}
       />
       <Tabs.Screen
         name="add-patient"
         options={{
           title: BengaliText.ADD_PATIENT,
-          tabBarIcon: ({ color }) => <Ionicons name="person-add" size={28} color={color} />,
+          tabBarIcon: ({ color }: { color: string }) => <Ionicons name="person-add" size={28} color={color} />,
         }}
       />
       <Tabs.Screen
         name="search-patient"
         options={{
           title: BengaliText.SEARCH_PATIENT,
-          tabBarIcon: ({ color }) => <Ionicons name="search" size={28} color={color} />,
+          tabBarIcon: ({ color }: { color: string }) => <Ionicons name="search" size={28} color={color} />,
         }}
       />
     </Tabs>

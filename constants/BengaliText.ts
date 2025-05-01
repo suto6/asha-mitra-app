@@ -85,6 +85,30 @@ const BengaliText = {
   // Home Page
   WELCOME: 'নমস্কার',
   QUICK_ACTIONS: 'দ্রুত কার্যক্রম',
+
+  // Main Menu Items
+  ADD_NEW_PATIENT: 'নতুন রোগী যুক্ত করুন',
+  VIEW_ALL_PATIENTS: 'সব রোগীর তালিকা',
+  SEARCH_BY_NAME: 'নাম দিয়ে খুঁজুন',
+  RISK_ALERTS: 'ঝুঁকির সতর্কতা',
+  SCHEDULE_CALENDAR: 'সময়সূচি',
+  REPORTS: 'রিপোর্ট',
+  VOICE_HELP: 'ভয়েস হেল্প',
+
+  // Patient Types
+  PREGNANT: 'গর্ভবতী',
+  NEWBORN: 'নবজাতক',
+  CHILD: 'শিশু',
+
+  // Schedule
+  ANC_VISITS: 'ANC পরিদর্শন',
+  IMMUNIZATION: 'টিকাদান',
+
+  // Reports
+  PREGNANCIES: 'গর্ভধারণ',
+  DELIVERIES: 'প্রসব',
+  IMMUNIZATIONS_DONE: 'টিকাদান সম্পন্ন',
+  THIS_MONTH: 'এই মাসে',
 };
 
 export default BengaliText;

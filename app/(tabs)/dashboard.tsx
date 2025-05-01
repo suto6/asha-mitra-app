@@ -180,32 +180,108 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* Quick Action Section */}
-        <View style={styles.quickActionsSection}>
+        {/* Main Menu Section */}
+        <View style={styles.mainMenuSection}>
           <Text style={styles.sectionTitle}>{BengaliText.QUICK_ACTIONS}</Text>
 
-          <View style={styles.actionCardsContainer}>
-            <TouchableOpacity
-              style={styles.actionCard}
-              onPress={navigateToAddPatient}
-              activeOpacity={0.8}
-            >
-              <View style={[styles.actionIconContainer, { backgroundColor: '#4CD964' }]}>
-                <Ionicons name="person-add" size={28} color="#FFFFFF" />
-              </View>
-              <Text style={styles.actionCardTitle}>{BengaliText.ADD_PATIENT}</Text>
-            </TouchableOpacity>
+          <View style={styles.menuGrid}>
+            {/* Row 1 */}
+            <View style={styles.menuRow}>
+              <TouchableOpacity
+                style={styles.menuCard}
+                onPress={navigateToAddPatient}
+                activeOpacity={0.8}
+              >
+                <View style={[styles.menuIconContainer, { backgroundColor: '#4CD964' }]}>
+                  <Ionicons name="add-circle" size={32} color="#FFFFFF" />
+                </View>
+                <Text style={styles.menuCardTitle}>{BengaliText.ADD_NEW_PATIENT}</Text>
+                <Text style={styles.menuCardSubtitle}>Start voice input</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.actionCard}
-              onPress={navigateToSearchPatient}
-              activeOpacity={0.8}
-            >
-              <View style={[styles.actionIconContainer, { backgroundColor: '#4A90E2' }]}>
-                <Ionicons name="search" size={28} color="#FFFFFF" />
-              </View>
-              <Text style={styles.actionCardTitle}>{BengaliText.SEARCH_PATIENT}</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.menuCard}
+                onPress={() => router.push('/patient/list')}
+                activeOpacity={0.8}
+              >
+                <View style={[styles.menuIconContainer, { backgroundColor: '#FF9500' }]}>
+                  <Ionicons name="list" size={32} color="#FFFFFF" />
+                </View>
+                <Text style={styles.menuCardTitle}>{BengaliText.VIEW_ALL_PATIENTS}</Text>
+                <Text style={styles.menuCardSubtitle}>Filter by type</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Row 2 */}
+            <View style={styles.menuRow}>
+              <TouchableOpacity
+                style={styles.menuCard}
+                onPress={navigateToSearchPatient}
+                activeOpacity={0.8}
+              >
+                <View style={[styles.menuIconContainer, { backgroundColor: '#4A90E2' }]}>
+                  <Ionicons name="search" size={32} color="#FFFFFF" />
+                </View>
+                <Text style={styles.menuCardTitle}>{BengaliText.SEARCH_BY_NAME}</Text>
+                <Text style={styles.menuCardSubtitle}>Voice/text search</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.menuCard}
+                onPress={() => router.push('/patient/risk-alerts')}
+                activeOpacity={0.8}
+              >
+                <View style={[styles.menuIconContainer, { backgroundColor: '#FF3B30' }]}>
+                  <Ionicons name="warning" size={32} color="#FFFFFF" />
+                </View>
+                <Text style={styles.menuCardTitle}>{BengaliText.RISK_ALERTS}</Text>
+                <Text style={styles.menuCardSubtitle}>Patients needing attention</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Row 3 */}
+            <View style={styles.menuRow}>
+              <TouchableOpacity
+                style={styles.menuCard}
+                onPress={() => router.push('/patient/schedule')}
+                activeOpacity={0.8}
+              >
+                <View style={[styles.menuIconContainer, { backgroundColor: '#5856D6' }]}>
+                  <Ionicons name="calendar" size={32} color="#FFFFFF" />
+                </View>
+                <Text style={styles.menuCardTitle}>{BengaliText.SCHEDULE_CALENDAR}</Text>
+                <Text style={styles.menuCardSubtitle}>ANC visits, immunizations</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.menuCard}
+                onPress={() => router.push('/patient/reports')}
+                activeOpacity={0.8}
+              >
+                <View style={[styles.menuIconContainer, { backgroundColor: '#34C759' }]}>
+                  <Ionicons name="bar-chart" size={32} color="#FFFFFF" />
+                </View>
+                <Text style={styles.menuCardTitle}>{BengaliText.REPORTS}</Text>
+                <Text style={styles.menuCardSubtitle}>Monthly summary</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Row 4 */}
+            <View style={styles.menuRow}>
+              <TouchableOpacity
+                style={styles.menuCard}
+                onPress={() => router.push('/help/voice')}
+                activeOpacity={0.8}
+              >
+                <View style={[styles.menuIconContainer, { backgroundColor: '#007AFF' }]}>
+                  <Ionicons name="mic" size={32} color="#FFFFFF" />
+                </View>
+                <Text style={styles.menuCardTitle}>{BengaliText.VOICE_HELP}</Text>
+                <Text style={styles.menuCardSubtitle}>Tutorial in Bengali</Text>
+              </TouchableOpacity>
+
+              <View style={styles.menuCard} />
+            </View>
           </View>
         </View>
 
@@ -445,28 +521,33 @@ const styles = StyleSheet.create({
     color: '#888888',
   },
 
-  // Quick Actions Styles
-  quickActionsSection: {
+  // Main Menu Styles
+  mainMenuSection: {
     paddingHorizontal: 20,
     marginBottom: 30,
   },
-  actionCardsContainer: {
+  menuGrid: {
+    marginTop: 10,
+  },
+  menuRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginBottom: 16,
   },
-  actionCard: {
+  menuCard: {
     width: '48%',
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    padding: 20,
+    padding: 16,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    minHeight: 140,
   },
-  actionIconContainer: {
+  menuIconContainer: {
     width: 70,
     height: 70,
     borderRadius: 35,
@@ -479,10 +560,16 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 3,
   },
-  actionCardTitle: {
-    fontSize: 16,
+  menuCardTitle: {
+    fontSize: 14,
     fontWeight: '600',
     color: '#333333',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  menuCardSubtitle: {
+    fontSize: 12,
+    color: '#666666',
     textAlign: 'center',
   },
 

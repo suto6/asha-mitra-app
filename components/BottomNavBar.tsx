@@ -12,10 +12,10 @@ const BottomNavBar = () => {
   // Animation values for the active indicator
   const [animations] = useState({
     home: new Animated.Value(0),
-    stats: new Animated.Value(0),
+    patients: new Animated.Value(0),
     add: new Animated.Value(0),
-    notifications: new Animated.Value(0),
-    profile: new Animated.Value(0),
+    calendar: new Animated.Value(0),
+    more: new Animated.Value(0),
   });
 
   // Update active tab based on current path
@@ -23,14 +23,15 @@ const BottomNavBar = () => {
     let tab = '';
     if (currentPath.includes('dashboard')) {
       tab = 'home';
-    } else if (currentPath.includes('stats') || currentPath.includes('index')) {
-      tab = 'stats';
+    } else if (currentPath.includes('patient/list') || currentPath.includes('patient/risk-alerts')) {
+      tab = 'patients';
     } else if (currentPath.includes('add-patient')) {
       tab = 'add';
-    } else if (currentPath.includes('notifications')) {
-      tab = 'notifications';
-    } else if (currentPath.includes('profile')) {
-      tab = 'profile';
+    } else if (currentPath.includes('patient/schedule')) {
+      tab = 'calendar';
+    } else if (currentPath.includes('patient/reports') || currentPath.includes('help/voice') ||
+               currentPath.includes('search-patient') || currentPath.includes('profile')) {
+      tab = 'more';
     }
 
     setActiveTab(tab);
@@ -58,6 +59,7 @@ const BottomNavBar = () => {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
+        {/* Home Button */}
         <TouchableOpacity
           style={styles.navButton}
           onPress={() => handlePress('/(tabs)/dashboard', 'home')}
@@ -79,27 +81,29 @@ const BottomNavBar = () => {
           <Text style={[styles.tabLabel, { color: getTabColor('home') }]}>Home</Text>
         </TouchableOpacity>
 
+        {/* Patients Button */}
         <TouchableOpacity
           style={styles.navButton}
-          onPress={() => handlePress('/(tabs)/index', 'stats')}
+          onPress={() => handlePress('/patient/list', 'patients')}
           activeOpacity={0.7}
         >
           <Animated.View
             style={[
               styles.iconBackground,
               {
-                opacity: animations.stats,
-                transform: [{ scale: animations.stats.interpolate({
+                opacity: animations.patients,
+                transform: [{ scale: animations.patients.interpolate({
                   inputRange: [0, 1],
                   outputRange: [0.8, 1]
                 }) }]
               }
             ]}
           />
-          <Ionicons name="stats-chart" size={24} color={getTabColor('stats')} />
-          <Text style={[styles.tabLabel, { color: getTabColor('stats') }]}>Stats</Text>
+          <Ionicons name="people" size={24} color={getTabColor('patients')} />
+          <Text style={[styles.tabLabel, { color: getTabColor('patients') }]}>Patients</Text>
         </TouchableOpacity>
 
+        {/* Add Patient Button */}
         <TouchableOpacity
           style={styles.actionButtonContainer}
           onPress={() => handlePress('/(tabs)/add-patient', 'add')}
@@ -111,46 +115,48 @@ const BottomNavBar = () => {
           <Text style={styles.actionLabel}>Add</Text>
         </TouchableOpacity>
 
+        {/* Calendar Button */}
         <TouchableOpacity
           style={styles.navButton}
-          onPress={() => handlePress('/(tabs)/search-patient', 'notifications')}
+          onPress={() => handlePress('/patient/schedule', 'calendar')}
           activeOpacity={0.7}
         >
           <Animated.View
             style={[
               styles.iconBackground,
               {
-                opacity: animations.notifications,
-                transform: [{ scale: animations.notifications.interpolate({
+                opacity: animations.calendar,
+                transform: [{ scale: animations.calendar.interpolate({
                   inputRange: [0, 1],
                   outputRange: [0.8, 1]
                 }) }]
               }
             ]}
           />
-          <Ionicons name="search" size={24} color={getTabColor('notifications')} />
-          <Text style={[styles.tabLabel, { color: getTabColor('notifications') }]}>Search</Text>
+          <Ionicons name="calendar" size={24} color={getTabColor('calendar')} />
+          <Text style={[styles.tabLabel, { color: getTabColor('calendar') }]}>Schedule</Text>
         </TouchableOpacity>
 
+        {/* More Button */}
         <TouchableOpacity
           style={styles.navButton}
-          onPress={() => handlePress('/profile', 'profile')}
+          onPress={() => handlePress('/more-menu', 'more')}
           activeOpacity={0.7}
         >
           <Animated.View
             style={[
               styles.iconBackground,
               {
-                opacity: animations.profile,
-                transform: [{ scale: animations.profile.interpolate({
+                opacity: animations.more,
+                transform: [{ scale: animations.more.interpolate({
                   inputRange: [0, 1],
                   outputRange: [0.8, 1]
                 }) }]
               }
             ]}
           />
-          <Ionicons name="person" size={24} color={getTabColor('profile')} />
-          <Text style={[styles.tabLabel, { color: getTabColor('profile') }]}>Profile</Text>
+          <Ionicons name="menu" size={24} color={getTabColor('more')} />
+          <Text style={[styles.tabLabel, { color: getTabColor('more') }]}>More</Text>
         </TouchableOpacity>
       </View>
     </View>
