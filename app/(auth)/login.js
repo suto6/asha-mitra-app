@@ -12,10 +12,10 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const { isAuthenticated, login } = useAuth();
 
-  // If user is already logged in, redirect to home
+  // If user is already logged in, redirect to dashboard
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/dashboard');
     }
   }, [isAuthenticated]);
 
@@ -29,8 +29,8 @@ export default function LoginScreen() {
       // Simple demo login
       await login(phoneNumber || '1234567890', name || 'Demo User');
 
-      // Navigate to home screen on successful login
-      router.replace('/(tabs)');
+      // Navigate to dashboard screen on successful login
+      router.replace('/(tabs)/dashboard');
     } catch (error) {
       console.error('Login error:', error);
       setLoading(false);

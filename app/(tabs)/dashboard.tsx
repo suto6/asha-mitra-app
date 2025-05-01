@@ -1,19 +1,27 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
-import { ThemedView } from '@/components/ThemedView';
-import { ThemedText } from '@/components/ThemedText';
-import ProfileHeader from '@/components/ProfileHeader';
 import StatusCard from '@/components/StatusCard';
 import MeetingItem from '@/components/MeetingItem';
-import ActionButton from '@/components/ActionButton';
 import HealthDataCard from '@/components/HealthDataCard';
 import BottomNavBar from '@/components/BottomNavBar';
 import BengaliText from '@/constants/BengaliText';
 
 export default function DashboardScreen() {
-  const { userProfile } = useAuth();
+  const { userProfile, logout } = useAuth();
+  // Define patient type
+  interface Patient {
+    id: string;
+    name: string;
+    age: string;
+    lastVisit: string;
+    lmpDate: string;
+  }
+
+  const [recentPatients, setRecentPatients] = useState<Patient[]>([]);
+  const [loading, setLoading] = useState(false);
 
   // Mock data for status
   const dailyStatus = {
@@ -39,22 +47,6 @@ export default function DashboardScreen() {
     },
   ];
 
-  // Mock data for action buttons
-  const actionButtons = [
-    {
-      id: '1',
-      title: 'নির্ধারিত কেন্দ্র',
-      icon: 'people',
-      color: '#FF9500',
-    },
-    {
-      id: '2',
-      title: 'মাসিক পরিকল্পনা',
-      icon: 'calendar',
-      color: '#FF3B30',
-    },
-  ];
-
   // Mock health data
   const healthData = {
     target: 345,
@@ -65,28 +57,93 @@ export default function DashboardScreen() {
   // Mock heart rate data
   const heartRateData = [78, 82, 75, 88, 92, 85, 79, 82, 90, 86, 82, 78];
 
+  useEffect(() => {
+    // In a real implementation, we would fetch recent patients
+    // For demo purposes, we're using placeholder data
+    setRecentPatients([
+      {
+        id: '1',
+        name: 'পিঙ্কি বিশ্বাস',
+        age: '25',
+        lastVisit: '২০২৩-০৫-১০',
+        lmpDate: '২০২৩-০৪-০১',
+      },
+      {
+        id: '2',
+        name: 'সুমিতা রায়',
+        age: '22',
+        lastVisit: '২০২৩-০৫-০৮',
+        lmpDate: '২০২৩-০৩-১৫',
+      },
+    ]);
+  }, []);
+
+  const handleLogout = async () => {
+    setLoading(true);
+    const result = await logout();
+    setLoading(false);
+
+    if (result.success) {
+      router.replace('/(auth)/login');
+    }
+  };
+
+  const navigateToAddPatient = () => {
+    router.push('/(tabs)/add-patient');
+  };
+
+  const navigateToSearchPatient = () => {
+    router.push('/(tabs)/search-patient');
+  };
+
+  const navigateToPatientDetails = (patientId: string) => {
+    router.push({
+      pathname: '/patient/[id]',
+      params: { id: patientId }
+    });
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Profile Header */}
-        <ProfileHeader
-          name={userProfile?.name || 'Sameer Singh'}
-          role={userProfile?.role || 'আশা কর্মী'}
-          onProfilePress={() => console.log('Profile pressed')}
-        />
+        {/* Header with Profile */}
+        <View style={styles.headerContainer}>
+          <View style={styles.header}>
+            <View style={styles.profileSection}>
+              <View style={styles.avatarContainer}>
+                <Text style={styles.avatarText}>
+                  {userProfile?.name ? userProfile.name.charAt(0) : 'অ'}
+                </Text>
+              </View>
+              <View>
+                <Text style={styles.welcomeText}>
+                  {userProfile?.name ? `${BengaliText.WELCOME}, ${userProfile.name}` : BengaliText.WELCOME}
+                </Text>
+                <Text style={styles.subtitle}>ASHA Mitra</Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              style={styles.logoutButton}
+              onPress={handleLogout}
+              disabled={loading}
+            >
+              <Ionicons name="log-out-outline" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+        </View>
 
         {/* Health Data Section */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionHeaderTitle}>আপনার স্বাস্থ্য তথ্য</Text>
+          <Text style={styles.sectionHeaderTitle}>{BengaliText.yourHealthData}</Text>
           <TouchableOpacity style={styles.todayButton}>
-            <Text style={styles.todayButtonText}>আজ</Text>
+            <Text style={styles.todayButtonText}>{BengaliText.today}</Text>
             <Ionicons name="chevron-down" size={16} color="#555" />
           </TouchableOpacity>
         </View>
 
         {/* Health Data Card */}
         <HealthDataCard
-          title="ক্যালোরি"
+          title={BengaliText.calories}
           target={healthData.target}
           consumed={healthData.consumed}
           remaining={healthData.remaining}
@@ -98,7 +155,7 @@ export default function DashboardScreen() {
           <View style={styles.cardHeader}>
             <View style={styles.cardTitleContainer}>
               <Ionicons name="heart" size={20} color="#FF5757" style={styles.cardIcon} />
-              <Text style={styles.cardTitle}>হার্ট রেট</Text>
+              <Text style={styles.cardTitle}>{BengaliText.heartRate}</Text>
             </View>
             <Text style={styles.heartRateValue}>102</Text>
           </View>
@@ -123,30 +180,95 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* Daily Status Card */}
-        <StatusCard
-          title="দৈনিক স্ট্যাটাস"
-          stats={[
-            { label: 'নির্ধারিত ANC', value: dailyStatus.assigned, color: '#4CD964' },
-            { label: 'ANC খোলা', value: dailyStatus.open, color: '#FF9500' },
-          ]}
-          onViewAll={() => console.log('View all status')}
-        />
+        {/* Quick Action Section */}
+        <View style={styles.quickActionsSection}>
+          <Text style={styles.sectionTitle}>{BengaliText.QUICK_ACTIONS}</Text>
 
-        {/* Debrief Card */}
-        <View style={styles.card}>
-          <View style={styles.debriefContent}>
-            <Text style={styles.cardTitle}>ডিব্রিফ</Text>
-            <TouchableOpacity style={styles.debriefButton}>
-              <Text style={styles.debriefButtonText}>ডিব্রিফ</Text>
-              <Ionicons name="chevron-forward" size={16} color="#4A90E2" />
+          <View style={styles.actionCardsContainer}>
+            <TouchableOpacity
+              style={styles.actionCard}
+              onPress={navigateToAddPatient}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.actionIconContainer, { backgroundColor: '#4CD964' }]}>
+                <Ionicons name="person-add" size={28} color="#FFFFFF" />
+              </View>
+              <Text style={styles.actionCardTitle}>{BengaliText.ADD_PATIENT}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionCard}
+              onPress={navigateToSearchPatient}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.actionIconContainer, { backgroundColor: '#4A90E2' }]}>
+                <Ionicons name="search" size={28} color="#FFFFFF" />
+              </View>
+              <Text style={styles.actionCardTitle}>{BengaliText.SEARCH_PATIENT}</Text>
             </TouchableOpacity>
           </View>
         </View>
 
+        {/* Daily Status Card */}
+        <View style={styles.statusSection}>
+          <StatusCard
+            title={BengaliText.dailyStatus}
+            stats={[
+              { label: BengaliText.assignedANCs, value: dailyStatus.assigned, color: '#4CD964' },
+              { label: BengaliText.openANCs, value: dailyStatus.open, color: '#FF9500' },
+            ]}
+            onViewAll={() => console.log('View all status')}
+          />
+        </View>
+
+        {/* Recent Patients Section */}
+        <View style={styles.recentPatientsSection}>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionTitle}>{BengaliText.RECENT_PATIENTS}</Text>
+            <TouchableOpacity
+              style={styles.viewAllButton}
+              onPress={navigateToSearchPatient}
+            >
+              <Text style={styles.viewAllText}>{BengaliText.SEARCH_PATIENT}</Text>
+              <Ionicons name="chevron-forward" size={16} color="#4A90E2" />
+            </TouchableOpacity>
+          </View>
+
+          {recentPatients.length > 0 ? (
+            <View style={styles.patientCardsContainer}>
+              {recentPatients.map((patient) => (
+                <TouchableOpacity
+                  key={patient.id}
+                  style={styles.patientCard}
+                  onPress={() => navigateToPatientDetails(patient.id)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.patientIconContainer}>
+                    <Ionicons name="person" size={24} color="#4A90E2" />
+                  </View>
+                  <View style={styles.patientInfo}>
+                    <Text style={styles.patientName}>{patient.name}</Text>
+                    <Text style={styles.patientDetails}>
+                      {BengaliText.AGE}: {patient.age} | {BengaliText.LMP_DATE}: {patient.lmpDate}
+                    </Text>
+                  </View>
+                  <View style={styles.patientCardAction}>
+                    <Ionicons name="chevron-forward" size={24} color="#CCCCCC" />
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : (
+            <View style={styles.emptyStateContainer}>
+              <Ionicons name="people" size={48} color="#CCCCCC" />
+              <Text style={styles.emptyText}>{BengaliText.NO_RECENT_PATIENTS}</Text>
+            </View>
+          )}
+        </View>
+
         {/* Today's Meetings */}
         <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle}>আজকের মিটিং</Text>
+          <Text style={styles.sectionTitle}>{BengaliText.todaysMeetings}</Text>
 
           {todaysMeetings.map(meeting => (
             <MeetingItem
@@ -155,19 +277,6 @@ export default function DashboardScreen() {
               subtitle={meeting.subtitle}
               time={meeting.time}
               status={meeting.status}
-            />
-          ))}
-        </View>
-
-        {/* Action Buttons */}
-        <View style={styles.actionButtonsContainer}>
-          {actionButtons.map(button => (
-            <ActionButton
-              key={button.id}
-              title={button.title}
-              icon={button.icon}
-              color={button.color}
-              onPress={() => console.log(`Pressed ${button.title}`)}
             />
           ))}
         </View>
@@ -188,15 +297,75 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F7FA',
   },
   scrollContent: {
-    padding: 16,
     paddingBottom: 100, // Extra space for bottom nav
   },
+  // Header Styles
+  headerContainer: {
+    backgroundColor: '#4A90E2',
+    paddingTop: 60,
+    paddingBottom: 30,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  profileSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatarContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  avatarText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  welcomeText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginTop: 4,
+  },
+  logoutButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // Health Data Section
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
     marginTop: 8,
+    paddingHorizontal: 20,
   },
   sectionHeaderTitle: {
     fontSize: 20,
@@ -221,6 +390,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
+    marginHorizontal: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -274,26 +444,59 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#888888',
   },
-  debriefCard: {
+
+  // Quick Actions Styles
+  quickActionsSection: {
+    paddingHorizontal: 20,
+    marginBottom: 30,
+  },
+  actionCardsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  actionCard: {
+    width: '48%',
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
+    padding: 20,
+    alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 3,
   },
+  actionIconContainer: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  actionCardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333333',
+    textAlign: 'center',
+  },
+
+  // Status Section
+  statusSection: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+
+  // Debrief Styles
   debriefContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  debriefTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333333',
   },
   debriefButton: {
     flexDirection: 'row',
@@ -304,8 +507,84 @@ const styles = StyleSheet.create({
     color: '#4A90E2',
     marginRight: 4,
   },
+
+  // Recent Patients Styles
+  recentPatientsSection: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  viewAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  viewAllText: {
+    fontSize: 16,
+    color: '#4A90E2',
+    marginRight: 4,
+  },
+  patientCardsContainer: {
+    marginBottom: 20,
+  },
+  patientCard: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  patientIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#F0F7FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  patientInfo: {
+    flex: 1,
+  },
+  patientName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333333',
+    marginBottom: 4,
+  },
+  patientDetails: {
+    fontSize: 14,
+    color: '#666666',
+  },
+  patientCardAction: {
+    padding: 8,
+  },
+  emptyStateContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#888888',
+    textAlign: 'center',
+    marginTop: 16,
+  },
+
+  // Meetings Section
   sectionContainer: {
     marginBottom: 20,
+    paddingHorizontal: 20,
   },
   sectionTitle: {
     fontSize: 18,
@@ -313,12 +592,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     color: '#333333',
   },
-  actionButtonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    marginBottom: 20,
-  },
+
+  // Bottom Nav Space
   bottomNavSpace: {
     height: 60,
   },
