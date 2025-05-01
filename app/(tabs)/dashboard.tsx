@@ -595,6 +595,6 @@ const styles = StyleSheet.create({
 
   // Bottom Nav Space
   bottomNavSpace: {
-    height: 60,
+    height: 90,
   },
 });

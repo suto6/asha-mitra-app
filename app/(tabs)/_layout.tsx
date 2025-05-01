@@ -1,15 +1,12 @@
-import { Tabs } from 'expo-router';
+import { Tabs, router } from 'expo-router';
 import React from 'react';
-import { Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { HapticTab } from '@/components/HapticTab';
-import TabBarBackground from '@/components/ui/TabBarBackground';
+import BottomNavBar from '@/components/BottomNavBar';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import BengaliText from '@/constants/BengaliText';
+import { default as BengaliText } from '@/constants/BengaliText';
 import { useAuth } from '@/contexts/AuthContext';
-import { router } from 'expo-router';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -31,19 +28,10 @@ export default function TabLayout() {
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
-          },
-          default: {},
-        }),
-        tabBarLabelStyle: {
-          fontSize: 14,
-        },
-      }}>
+        // Hide the default tab bar since we're using our custom BottomNavBar
+        tabBarStyle: { display: 'none' },
+      }}
+      tabBar={() => <BottomNavBar />}>
       <Tabs.Screen
         name="dashboard"
         options={{
