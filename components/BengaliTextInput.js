@@ -42,24 +42,29 @@ const BengaliTextInput = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    marginBottom: 20,
     width: '100%',
   },
   label: {
-    fontSize: 18,
+    fontSize: 16,
     marginBottom: 8,
-    fontWeight: '500',
+    fontWeight: '600',
     color: '#333',
   },
   input: {
     backgroundColor: '#F5F5F5',
     borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 10,
+    borderColor: '#E0E0E0',
+    borderRadius: 12,
     padding: 16,
-    fontSize: 18,
+    fontSize: 16,
     color: '#333',
-    minHeight: 60,
+    minHeight: 56,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   multilineInput: {
     minHeight: 120,
@@ -67,15 +72,18 @@ const styles = StyleSheet.create({
   },
   inputError: {
     borderColor: '#FF3B30',
+    borderWidth: 1.5,
   },
   disabledInput: {
-    backgroundColor: '#EBEBEB',
+    backgroundColor: '#F0F0F0',
     color: '#888',
+    borderColor: '#E0E0E0',
   },
   errorText: {
     color: '#FF3B30',
     fontSize: 14,
-    marginTop: 4,
+    marginTop: 6,
+    fontWeight: '500',
   },
 });
 

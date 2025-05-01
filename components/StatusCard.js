@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import CircularProgress from './CircularProgress';
+import BengaliText from '../constants/BengaliText';
 
 const StatusCard = ({ title, stats, onViewAll }) => {
   return (
@@ -9,18 +10,18 @@ const StatusCard = ({ title, stats, onViewAll }) => {
       <View style={styles.header}>
         <Text style={styles.title}>{title}</Text>
         <TouchableOpacity style={styles.viewAllButton} onPress={onViewAll}>
-          <Text style={styles.viewAllText}>View</Text>
+          <Text style={styles.viewAllText}>দেখুন</Text>
           <Ionicons name="chevron-forward" size={16} color="#4A90E2" />
         </TouchableOpacity>
       </View>
-      
+
       <View style={styles.statsContainer}>
         {stats.map((stat, index) => (
           <View key={index} style={styles.statItem}>
-            <CircularProgress 
+            <CircularProgress
               percentage={75} // Example percentage
-              size={70}
-              strokeWidth={8}
+              size={80}
+              strokeWidth={10}
               color={stat.color}
               value={stat.value}
             />
@@ -28,8 +29,8 @@ const StatusCard = ({ title, stats, onViewAll }) => {
           </View>
         ))}
       </View>
-      
-      <Text style={styles.lastUpdated}>1h ago</Text>
+
+      <Text style={styles.lastUpdated}>১ ঘন্টা আগে</Text>
     </View>
   );
 };
@@ -37,7 +38,7 @@ const StatusCard = ({ title, stats, onViewAll }) => {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 16,
     shadowColor: '#000',

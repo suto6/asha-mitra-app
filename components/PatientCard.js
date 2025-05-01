@@ -5,31 +5,49 @@ import BengaliText from '../constants/BengaliText';
 
 // Card component for displaying patient information
 const PatientCard = ({ patient, onPress }) => {
+  // Generate a color based on the patient name for the avatar
+  const getAvatarColor = (name) => {
+    const colors = ['#4A90E2', '#FF9500', '#4CD964', '#FF3B30', '#8E5D9F', '#5AC8FA'];
+    let sum = 0;
+    for (let i = 0; i < name.length; i++) {
+      sum += name.charCodeAt(i);
+    }
+    return colors[sum % colors.length];
+  };
+
+  const avatarColor = getAvatarColor(patient.name);
+  const nameInitial = patient.name.charAt(0).toUpperCase();
+
   return (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={styles.card}
       onPress={onPress}
       activeOpacity={0.7}
     >
-      <View style={styles.iconContainer}>
-        <Ionicons name="person" size={32} color="#4A90E2" />
+      <View style={[styles.avatarContainer, { backgroundColor: `${avatarColor}20` }]}>
+        <Text style={[styles.avatarText, { color: avatarColor }]}>{nameInitial}</Text>
       </View>
       <View style={styles.infoContainer}>
         <Text style={styles.name}>{patient.name}</Text>
         <View style={styles.detailsRow}>
           <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>{BengaliText.AGE}</Text>
-            <Text style={styles.detailValue}>{patient.age} {BengaliText.AGE}</Text>
+            <Text style={styles.detailLabel}>{BengaliText.AGE}:</Text>
+            <Text style={styles.detailValue}>{patient.age}</Text>
           </View>
           {patient.lmpDate && (
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>{BengaliText.LMP_DATE}</Text>
-              <Text style={styles.detailValue}>{patient.lmpDate}</Text>
-            </View>
+            <>
+              <View style={styles.detailDivider} />
+              <View style={styles.detailItem}>
+                <Text style={styles.detailLabel}>{BengaliText.LMP_DATE}:</Text>
+                <Text style={styles.detailValue}>{patient.lmpDate}</Text>
+              </View>
+            </>
           )}
         </View>
       </View>
-      <Ionicons name="chevron-forward" size={24} color="#CCCCCC" />
+      <View style={styles.actionContainer}>
+        <Ionicons name="chevron-forward" size={24} color="#CCCCCC" />
+      </View>
     </TouchableOpacity>
   );
 };
@@ -38,7 +56,7 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 12,
     alignItems: 'center',
@@ -48,14 +66,17 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  iconContainer: {
+  avatarContainer: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#F0F7FF',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
+  },
+  avatarText: {
+    fontSize: 24,
+    fontWeight: 'bold',
   },
   infoContainer: {
     flex: 1,
@@ -68,19 +89,30 @@ const styles = StyleSheet.create({
   },
   detailsRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: 'center',
   },
   detailItem: {
-    marginRight: 16,
-    marginBottom: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   detailLabel: {
     fontSize: 14,
     color: '#888888',
+    marginRight: 4,
   },
   detailValue: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#333333',
+    fontWeight: '500',
+  },
+  detailDivider: {
+    width: 1,
+    height: 16,
+    backgroundColor: '#DDDDDD',
+    marginHorizontal: 8,
+  },
+  actionContainer: {
+    padding: 4,
   },
 });
 

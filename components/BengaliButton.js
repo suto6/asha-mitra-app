@@ -2,11 +2,11 @@ import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
 
 // Large, accessible button with Bengali text
-const BengaliButton = ({ 
-  title, 
-  onPress, 
-  style, 
-  textStyle, 
+const BengaliButton = ({
+  title,
+  onPress,
+  style,
+  textStyle,
   disabled = false,
   loading = false,
   primary = true
@@ -43,27 +43,34 @@ const styles = StyleSheet.create({
   button: {
     paddingVertical: 16,
     paddingHorizontal: 24,
-    borderRadius: 12,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 60,
+    minHeight: 56,
     minWidth: 200,
     marginVertical: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   primaryButton: {
     backgroundColor: '#4A90E2',
   },
   secondaryButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
     borderColor: '#4A90E2',
   },
   disabledButton: {
-    backgroundColor: '#CCCCCC',
-    borderColor: '#CCCCCC',
+    backgroundColor: '#E0E0E0',
+    borderColor: '#E0E0E0',
+    shadowOpacity: 0,
+    elevation: 0,
   },
   buttonText: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     textAlign: 'center',
   },
@@ -74,7 +81,7 @@ const styles = StyleSheet.create({
     color: '#4A90E2',
   },
   disabledText: {
-    color: '#888888',
+    color: '#999999',
   },
 });
 

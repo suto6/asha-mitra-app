@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 const MeetingItem = ({ title, subtitle, time, status }) => {
   return (
@@ -8,18 +9,18 @@ const MeetingItem = ({ title, subtitle, time, status }) => {
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.subtitle}>{subtitle}</Text>
       </View>
-      
+
       <View style={styles.actionsContainer}>
         {status === 'upcoming' ? (
           <TouchableOpacity style={styles.startButton}>
-            <Text style={styles.startButtonText}>Start</Text>
+            <Text style={styles.startButtonText}>শুরু</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity style={styles.debriefButton}>
-            <Text style={styles.debriefButtonText}>Debrief</Text>
+            <Text style={styles.debriefButtonText}>ডিব্রিফ</Text>
           </TouchableOpacity>
         )}
-        
+
         <Text style={styles.timeText}>{time}</Text>
       </View>
     </View>
@@ -29,7 +30,7 @@ const MeetingItem = ({ title, subtitle, time, status }) => {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 12,
     flexDirection: 'row',
@@ -59,9 +60,9 @@ const styles = StyleSheet.create({
   },
   startButton: {
     backgroundColor: '#4A90E2',
-    paddingVertical: 6,
-    paddingHorizontal: 16,
-    borderRadius: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+    borderRadius: 20,
     marginBottom: 8,
   },
   startButtonText: {
@@ -71,9 +72,9 @@ const styles = StyleSheet.create({
   },
   debriefButton: {
     backgroundColor: '#F0F0F0',
-    paddingVertical: 6,
-    paddingHorizontal: 16,
-    borderRadius: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+    borderRadius: 20,
     marginBottom: 8,
   },
   debriefButtonText: {
