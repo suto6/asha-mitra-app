@@ -19,8 +19,10 @@ export default function StatsScreen() {
 
   // Text translations
   const translations = {
-    title: isEnglish ? 'Reports' : BengaliText.REPORTS,
-    subtitle: isEnglish ? 'Monthly Statistics' : 'মাসিক পরিসংখ্যান',
+    title: isEnglish ? 'Analytics & Reports' : 'বিশ্লেষণ এবং প্রতিবেদন',
+    subtitle: isEnglish ? 'Track progress and trends' : 'অগ্রগতি এবং প্রবণতা ট্র্যাক করুন',
+    statsDashboard: isEnglish ? 'Statistics Dashboard' : 'পরিসংখ্যান ড্যাশবোর্ড',
+    vsLastMonth: isEnglish ? 'vs last month' : 'গত মাসের তুলনায়',
     weekly: isEnglish ? 'Weekly' : 'সাপ্তাহিক',
     monthly: isEnglish ? 'Monthly' : 'মাসিক',
     quarterly: isEnglish ? 'Quarterly' : 'ত্রৈমাসিক',
@@ -34,7 +36,7 @@ export default function StatsScreen() {
     ancVisits: isEnglish ? 'ANC Visits' : 'ANC পরিদর্শন',
     deliveries: isEnglish ? 'Deliveries' : 'প্রসব',
     immunizations: isEnglish ? 'Immunizations' : 'টিকাদান',
-    progress: isEnglish ? 'Progress' : 'অগ্রগতি',
+    progress: isEnglish ? 'Goal Progress' : 'লক্ষ্য অগ্রগতি',
     ironTablets: isEnglish ? 'Iron Tablets Given' : 'আয়রন ট্যাবলেট প্রদান',
     pncCheckups: isEnglish ? 'PNC Checkups Completed' : 'PNC চেকআপ সম্পন্ন',
     pregnantWomenByTrimester: isEnglish ? 'Pregnant Women by Trimester' : 'ত্রৈমাসিক অনুসারে গর্ভবতী মহিলা',
@@ -50,6 +52,14 @@ export default function StatsScreen() {
     fullyVaccinated: isEnglish ? 'Fully Vaccinated' : 'সম্পূর্ণ টিকাপ্রাপ্ত',
     partiallyVaccinated: isEnglish ? 'Partially Vaccinated' : 'আংশিক টিকাপ্রাপ্ত',
     notVaccinated: isEnglish ? 'Not Vaccinated' : 'টিকা দেওয়া হয়নি',
+    missedCheckups: isEnglish ? 'Missed Checkups' : 'মিস করা চেকআপ',
+    completedCheckups: isEnglish ? 'Completed Checkups' : 'সম্পন্ন চেকআপ',
+    performanceMetrics: isEnglish ? 'Performance Metrics' : 'কর্মক্ষমতা পরিমাপ',
+    targetCompletion: isEnglish ? 'Target Completion' : 'লক্ষ্য সম্পূর্ণতা',
+    compareWithLastMonth: isEnglish ? 'Compare with Last Month' : 'গত মাসের সাথে তুলনা করুন',
+    improvement: isEnglish ? 'Improvement' : 'উন্নতি',
+    decline: isEnglish ? 'Decline' : 'হ্রাস',
+    noChange: isEnglish ? 'No Change' : 'কোন পরিবর্তন নেই',
   };
 
   useEffect(() => {
@@ -62,26 +72,57 @@ export default function StatsScreen() {
         immunizations: 18,
         ironTablets: 75, // percentage
         pncCheckups: 80, // percentage
+        targetCompletion: 85, // percentage of monthly targets met
+
+        // Comparison with previous month
+        comparison: {
+          ancVisits: { value: 20, change: 4, trend: 'up' },
+          deliveries: { value: 6, change: -1, trend: 'down' },
+          immunizations: { value: 15, change: 3, trend: 'up' },
+          ironTablets: { value: 68, change: 7, trend: 'up' },
+          pncCheckups: { value: 75, change: 5, trend: 'up' },
+        },
+
+        // Checkup completion stats
+        checkups: [
+          { name: translations.completedCheckups, population: 42, color: '#4BC0C0' },
+          { name: translations.missedCheckups, population: 8, color: '#FF6384' },
+        ],
+
         pregnantWomen: [
           { name: translations.firstTrimester, population: 8, color: '#FF9F40' },
           { name: translations.secondTrimester, population: 12, color: '#4BC0C0' },
           { name: translations.thirdTrimester, population: 6, color: '#36A2EB' },
         ],
+
         riskCases: [
           { name: translations.highRisk, population: 3, color: '#FF6384' },
           { name: translations.mediumRisk, population: 7, color: '#FFCD56' },
           { name: translations.lowRisk, population: 16, color: '#4BC0C0' },
         ],
+
         vaccinations: [
           { name: translations.fullyVaccinated, population: 22, color: '#4BC0C0' },
           { name: translations.partiallyVaccinated, population: 8, color: '#FFCD56' },
           { name: translations.notVaccinated, population: 4, color: '#FF6384' },
         ],
+
+        // Monthly trends for ANC visits
         monthlyData: {
           labels: isEnglish ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'] : ['জানু', 'ফেব্রু', 'মার্চ', 'এপ্রিল', 'মে', 'জুন'],
           datasets: [
             {
               data: [20, 45, 28, 80, 99, 43],
+            }
+          ]
+        },
+
+        // Weekly trends for current month
+        weeklyData: {
+          labels: isEnglish ? ['Week 1', 'Week 2', 'Week 3', 'Week 4'] : ['সপ্তাহ ১', 'সপ্তাহ ২', 'সপ্তাহ ৩', 'সপ্তাহ ৪'],
+          datasets: [
+            {
+              data: [12, 18, 24, 20],
             }
           ]
         }
@@ -168,7 +209,11 @@ export default function StatsScreen() {
     );
   };
 
-  const renderStatCard = (value, title, icon, color) => {
+  const renderStatCard = (value, title, icon, color, comparison) => {
+    const showComparison = comparison !== undefined;
+    const trend = showComparison ? comparison.trend : null;
+    const change = showComparison ? comparison.change : 0;
+
     return (
       <View style={styles.statCard}>
         <View style={[styles.statIconContainer, { backgroundColor: color }]}>
@@ -177,6 +222,75 @@ export default function StatsScreen() {
         <View style={styles.statContent}>
           <Text style={styles.statValue}>{value}</Text>
           <Text style={styles.statTitle}>{title}</Text>
+
+          {showComparison && (
+            <View style={styles.comparisonContainer}>
+              <Ionicons
+                name={trend === 'up' ? 'arrow-up' : trend === 'down' ? 'arrow-down' : 'remove'}
+                size={14}
+                color={trend === 'up' ? '#4CD964' : trend === 'down' ? '#FF3B30' : '#999999'}
+              />
+              <Text style={[
+                styles.comparisonText,
+                {
+                  color: trend === 'up' ? '#4CD964' :
+                         trend === 'down' ? '#FF3B30' :
+                         '#999999'
+                }
+              ]}>
+                {change > 0 ? '+' : ''}{change} {translations.vsLastMonth}
+              </Text>
+            </View>
+          )}
+        </View>
+      </View>
+    );
+  };
+
+  const renderPerformanceCard = () => {
+    if (!stats.month?.targetCompletion) return null;
+
+    return (
+      <View style={styles.performanceCard}>
+        <Text style={styles.performanceTitle}>{translations.targetCompletion}</Text>
+        <View style={styles.targetContainer}>
+          <View style={styles.targetProgressContainer}>
+            <View
+              style={[
+                styles.targetProgress,
+                { width: `${stats.month.targetCompletion}%` }
+              ]}
+            />
+          </View>
+          <Text style={styles.targetPercentage}>{stats.month.targetCompletion}%</Text>
+        </View>
+        <Text style={styles.performanceSubtitle}>{translations.compareWithLastMonth}</Text>
+
+        <View style={styles.comparisonGrid}>
+          {Object.entries(stats.month.comparison || {}).map(([key, data]) => (
+            <View key={key} style={styles.comparisonItem}>
+              <Text style={styles.comparisonItemTitle}>
+                {translations[key] || key}
+              </Text>
+              <View style={styles.comparisonValueRow}>
+                <Ionicons
+                  name={data.trend === 'up' ? 'arrow-up' : data.trend === 'down' ? 'arrow-down' : 'remove'}
+                  size={16}
+                  color={data.trend === 'up' ? '#4CD964' : data.trend === 'down' ? '#FF3B30' : '#999999'}
+                />
+                <Text style={[
+                  styles.comparisonItemValue,
+                  {
+                    color: data.trend === 'up' ? '#4CD964' :
+                           data.trend === 'down' ? '#FF3B30' :
+                           '#999999'
+                  }
+                ]}>
+                  {data.change > 0 ? '+' : ''}{data.change}
+                </Text>
+              </View>
+            </View>
+          ))}
         </View>
       </View>
     );
@@ -192,6 +306,12 @@ export default function StatsScreen() {
             <LanguageToggle style={styles.languageToggle} />
           </View>
           <Text style={styles.headerSubtitle}>{translations.subtitle}</Text>
+        </View>
+
+        {/* Stats Dashboard Banner */}
+        <View style={styles.dashboardBanner}>
+          <Ionicons name="stats-chart" size={24} color="#FFFFFF" />
+          <Text style={styles.dashboardText}>{translations.statsDashboard}</Text>
         </View>
 
         {/* Period Selector */}
@@ -330,6 +450,12 @@ export default function StatsScreen() {
           </View>
         ) : (
           <View style={styles.statsContainer}>
+            {/* Performance Metrics */}
+            <View style={styles.performanceSection}>
+              <Text style={styles.sectionTitle}>{translations.performanceMetrics}</Text>
+              {renderPerformanceCard()}
+            </View>
+
             {/* Summary Stats */}
             <View style={styles.summaryContainer}>
               <Text style={styles.sectionTitle}>{translations.monthlySummary}</Text>
@@ -339,21 +465,24 @@ export default function StatsScreen() {
                   stats.month?.ancVisits || 0,
                   translations.ancVisits,
                   'woman',
-                  '#4A90E2'
+                  '#4A90E2',
+                  stats.month?.comparison?.ancVisits
                 )}
 
                 {renderStatCard(
                   stats.month?.deliveries || 0,
                   translations.deliveries,
                   'happy',
-                  '#FF9500'
+                  '#FF9500',
+                  stats.month?.comparison?.deliveries
                 )}
 
                 {renderStatCard(
                   stats.month?.immunizations || 0,
                   translations.immunizations,
                   'medkit',
-                  '#34C759'
+                  '#34C759',
+                  stats.month?.comparison?.immunizations
                 )}
               </View>
             </View>
@@ -375,6 +504,12 @@ export default function StatsScreen() {
               )}
             </View>
 
+            {/* Checkup Completion Pie Chart */}
+            {renderPieChart(
+              stats.month?.checkups,
+              translations.completedCheckups
+            )}
+
             {/* Pie Charts */}
             {renderPieChart(
               stats.month?.pregnantWomen,
@@ -391,10 +526,16 @@ export default function StatsScreen() {
               translations.childrenVaccinationStatus
             )}
 
-            {/* Bar Chart */}
+            {/* Bar Chart - Monthly Trend */}
             {renderBarChart(
               stats.month?.monthlyData,
               translations.monthlyTrend
+            )}
+
+            {/* Bar Chart - Weekly Trend */}
+            {renderBarChart(
+              stats.month?.weeklyData,
+              translations.weekly
             )}
           </View>
         )}
@@ -438,6 +579,23 @@ const styles = StyleSheet.create({
     color: '#666666',
   },
   languageToggle: {
+    marginLeft: 10,
+  },
+  // Dashboard Banner
+  dashboardBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#34C759',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    marginHorizontal: 20,
+    marginBottom: 16,
+  },
+  dashboardText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
     marginLeft: 10,
   },
   selectorContainer: {
@@ -529,6 +687,95 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666666',
     textAlign: 'center',
+    marginBottom: 4,
+  },
+  comparisonContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  comparisonText: {
+    fontSize: 12,
+    marginLeft: 4,
+  },
+
+  // Performance Metrics Styles
+  performanceSection: {
+    marginBottom: 24,
+  },
+  performanceCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  performanceTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333333',
+    marginBottom: 16,
+  },
+  performanceSubtitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333333',
+    marginTop: 24,
+    marginBottom: 16,
+  },
+  targetContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  targetProgressContainer: {
+    flex: 1,
+    height: 24,
+    backgroundColor: '#F0F0F0',
+    borderRadius: 12,
+    marginRight: 12,
+    overflow: 'hidden',
+  },
+  targetProgress: {
+    height: '100%',
+    backgroundColor: '#4CD964',
+    borderRadius: 12,
+  },
+  targetPercentage: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333333',
+    width: 50,
+    textAlign: 'right',
+  },
+  comparisonGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  comparisonItem: {
+    width: '48%',
+    backgroundColor: '#F8F8F8',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+  },
+  comparisonItemTitle: {
+    fontSize: 14,
+    color: '#666666',
+    marginBottom: 8,
+  },
+  comparisonValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  comparisonItemValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 4,
   },
   progressSection: {
     marginBottom: 24,

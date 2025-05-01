@@ -6,7 +6,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import StatusCard from '@/components/StatusCard';
 import MeetingItem from '@/components/MeetingItem';
-import HealthDataCard from '@/components/HealthDataCard';
 import BottomNavBar from '@/components/BottomNavBar';
 import LanguageToggle from '@/components/LanguageToggle';
 import BengaliText from '@/constants/BengaliText';
@@ -18,24 +17,36 @@ export default function DashboardScreen() {
   // Text translations
   const translations = {
     welcome: isEnglish ? 'Welcome' : 'স্বাগতম',
-    dailySummary: isEnglish ? 'Daily Summary' : 'দৈনিক সারাংশ',
+    dailyActionCenter: isEnglish ? 'Daily Action Center' : 'দৈনিক কার্য কেন্দ্র',
+    todaysTasks: isEnglish ? 'Today\'s Tasks' : 'আজকের কাজ',
+    pendingVisits: isEnglish ? 'Pending Visits' : 'বাকি পরিদর্শন',
     ancCheckups: isEnglish ? 'ANC checkups pending' : 'ANC চেকআপ বাকি আছে',
     immunizationDue: isEnglish ? 'immunization due today' : 'টিকাদান আজ বাকি আছে',
     highRiskPregnant: isEnglish ? 'high risk pregnant woman' : 'উচ্চ ঝুঁকিপূর্ণ গর্ভবতী',
     todaysAppointments: isEnglish ? 'Today\'s Appointments' : 'আজকের অ্যাপয়েন্টমেন্ট',
+    thisWeeksAppointments: isEnglish ? 'This Week\'s Appointments' : 'এই সপ্তাহের অ্যাপয়েন্টমেন্ট',
     viewAll: isEnglish ? 'View All' : 'সব দেখুন',
     ancCheckup: isEnglish ? 'ANC Checkup' : 'ANC চেকআপ',
     immunization: isEnglish ? 'Immunization' : 'টিকাদান',
     quickActions: isEnglish ? 'Quick Actions' : BengaliText.QUICK_ACTIONS,
     addNewPatient: isEnglish ? 'Add New Patient' : BengaliText.ADD_NEW_PATIENT,
     searchByName: isEnglish ? 'Search by Name' : BengaliText.SEARCH_BY_NAME,
-    tipsAndGuidelines: isEnglish ? 'Tips & Guidelines' : 'টিপস এবং গাইডলাইন',
+    scheduleVisit: isEnglish ? 'Schedule Visit' : 'পরিদর্শন সময়সূচি',
+    recentlyAdded: isEnglish ? 'Recently Added Patients' : 'সাম্প্রতিক পেশেন্ট',
+    tipsOfTheDay: isEnglish ? 'Tips of the Day' : 'আজকের টিপস',
     drinkWater: isEnglish ? 'Drink plenty of water during pregnancy' : 'গর্ভাবস্থায় পর্যাপ্ত পানি পান করুন',
     waterTip: isEnglish ? 'Pregnant women should drink at least 8-10 glasses of water daily.' : 'গর্ভবতী মহিলাদের প্রতিদিন কমপক্ষে ৮-১০ গ্লাস পানি পান করা উচিত।',
     childNutrition: isEnglish ? 'Child Nutrition' : 'শিশুর পুষ্টি',
     nutritionTip: isEnglish ? 'Babies should be exclusively breastfed for the first 6 months.' : '৬ মাস পর্যন্ত শিশুকে শুধুমাত্র মায়ের দুধ খাওয়ানো উচিত।',
     immunizationSchedule: isEnglish ? 'Immunization Schedule' : 'টিকাদান সময়সূচি',
     scheduleTip: isEnglish ? 'Ensure all vaccines are given on time from birth.' : 'শিশুর জন্মের পর থেকে সময়মত সব টিকা দেওয়া নিশ্চিত করুন।',
+    today: isEnglish ? 'Today' : 'আজ',
+    tomorrow: isEnglish ? 'Tomorrow' : 'আগামীকাল',
+    yesterday: isEnglish ? 'Yesterday' : 'গতকাল',
+    markComplete: isEnglish ? 'Mark Complete' : 'সম্পন্ন চিহ্নিত করুন',
+    pregnant: isEnglish ? 'Pregnant' : BengaliText.PREGNANT,
+    newborn: isEnglish ? 'Newborn' : BengaliText.NEWBORN,
+    child: isEnglish ? 'Child' : BengaliText.CHILD,
   };
   // Define patient type
   interface Patient {
@@ -73,15 +84,7 @@ export default function DashboardScreen() {
     },
   ];
 
-  // Mock health data
-  const healthData = {
-    target: 345,
-    consumed: 125,
-    remaining: 220,
-  };
-
-  // Mock heart rate data
-  const heartRateData = [78, 82, 75, 88, 92, 85, 79, 82, 90, 86, 82, 78];
+  // No longer needed
 
   useEffect(() => {
     // In a real implementation, we would fetch recent patients
@@ -142,7 +145,7 @@ export default function DashboardScreen() {
                 <Text style={styles.welcomeText}>
                   {translations.welcome}, {userProfile?.name || 'ASHA Mitra'}
                 </Text>
-                <Text style={styles.subtitle}>ASHA Mitra</Text>
+                <Text style={styles.subtitle}>{translations.dailyActionCenter}</Text>
               </View>
             </View>
             <View style={styles.headerActions}>
@@ -158,57 +161,15 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* Health Data Section */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionHeaderTitle}>{BengaliText.yourHealthData}</Text>
-          <TouchableOpacity style={styles.todayButton}>
-            <Text style={styles.todayButtonText}>{BengaliText.today}</Text>
-            <Ionicons name="chevron-down" size={16} color="#555" />
-          </TouchableOpacity>
+        {/* Daily Action Center Banner */}
+        <View style={styles.actionCenterBanner}>
+          <Ionicons name="calendar-outline" size={24} color="#FFFFFF" />
+          <Text style={styles.actionCenterText}>{translations.dailyActionCenter}</Text>
         </View>
 
-        {/* Health Data Card */}
-        <HealthDataCard
-          title={BengaliText.calories}
-          target={healthData.target}
-          consumed={healthData.consumed}
-          remaining={healthData.remaining}
-          color="#8E5D9F"
-        />
-
-        {/* Heart Rate Card */}
-        <View style={[styles.card, styles.heartRateCard]}>
-          <View style={styles.cardHeader}>
-            <View style={styles.cardTitleContainer}>
-              <Ionicons name="heart" size={20} color="#FF5757" style={styles.cardIcon} />
-              <Text style={styles.cardTitle}>{BengaliText.heartRate}</Text>
-            </View>
-            <Text style={styles.heartRateValue}>102</Text>
-          </View>
-
-          <View style={styles.heartRateGraph}>
-            {heartRateData.map((value, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.heartRateBar,
-                  { height: value * 0.8, marginLeft: index > 0 ? 5 : 0 }
-                ]}
-              />
-            ))}
-          </View>
-
-          <View style={styles.timeLabels}>
-            <Text style={styles.timeLabel}>08:00</Text>
-            <Text style={styles.timeLabel}>09:00</Text>
-            <Text style={styles.timeLabel}>10:00</Text>
-            <Text style={styles.timeLabel}>11:00</Text>
-          </View>
-        </View>
-
-        {/* Daily Summary Card */}
+        {/* Daily Tasks Card */}
         <View style={styles.summaryCard}>
-          <Text style={styles.sectionTitle}>{translations.dailySummary}</Text>
+          <Text style={styles.sectionTitle}>{translations.todaysTasks}</Text>
           <View style={styles.summaryContent}>
             <View style={styles.summaryItem}>
               <Ionicons name="calendar-outline" size={24} color="#4A90E2" />
@@ -225,8 +186,8 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* Upcoming Appointments */}
-        <View style={styles.appointmentsSection}>
+        {/* Today's Appointments */}
+        <View style={styles.appointmentsSection} />
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.sectionTitle}>{translations.todaysAppointments}</Text>
             <TouchableOpacity
@@ -249,7 +210,12 @@ export default function DashboardScreen() {
                 <Text style={styles.appointmentTitle}>পিঙ্কি বিশ্বাস</Text>
                 <Text style={styles.appointmentSubtitle}>{translations.ancCheckup}</Text>
               </View>
-              <Ionicons name="chevron-forward" size={24} color="#CCCCCC" />
+              <View style={styles.appointmentActions}>
+                <TouchableOpacity style={styles.completeButton}>
+                  <Text style={styles.completeButtonText}>{translations.markComplete}</Text>
+                </TouchableOpacity>
+                <Ionicons name="chevron-forward" size={24} color="#CCCCCC" />
+              </View>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.appointmentCard} activeOpacity={0.7}>
@@ -262,10 +228,16 @@ export default function DashboardScreen() {
                 <Text style={styles.appointmentTitle}>অনিতা দাস</Text>
                 <Text style={styles.appointmentSubtitle}>{translations.immunization}</Text>
               </View>
-              <Ionicons name="chevron-forward" size={24} color="#CCCCCC" />
+              <View style={styles.appointmentActions}>
+                <TouchableOpacity style={styles.completeButton}>
+                  <Text style={styles.completeButtonText}>{translations.markComplete}</Text>
+                </TouchableOpacity>
+                <Ionicons name="chevron-forward" size={24} color="#CCCCCC" />
+              </View>
             </TouchableOpacity>
           </View>
-        </View>
+
+          
 
         {/* Quick Actions */}
         <View style={styles.quickActionsSection}>
@@ -293,56 +265,65 @@ export default function DashboardScreen() {
               </View>
               <Text style={styles.actionCardTitle}>{translations.searchByName}</Text>
             </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionCard}
+              onPress={() => router.push('/patient/schedule' as any)}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.actionIconContainer, { backgroundColor: '#5856D6' }]}>
+                <Ionicons name="calendar" size={28} color="#FFFFFF" />
+              </View>
+              <Text style={styles.actionCardTitle}>{translations.scheduleVisit}</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
-        {/* Tips & Guidelines */}
-        <View style={styles.tipsSection}>
-          <Text style={styles.sectionTitle}>{translations.tipsAndGuidelines}</Text>
+        {/* Recently Added Patients */}
+        <View style={styles.recentPatientsSection}>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionTitle}>{translations.recentlyAdded}</Text>
+            <TouchableOpacity
+              style={styles.viewAllButton}
+              onPress={() => router.push('/patient/list' as any)}
+            >
+              <Text style={styles.viewAllText}>{translations.viewAll}</Text>
+              <Ionicons name="chevron-forward" size={16} color="#4A90E2" />
+            </TouchableOpacity>
+          </View>
 
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.tipsScrollContent}
+            contentContainerStyle={styles.recentPatientsScroll}
           >
-            <TouchableOpacity style={styles.tipCard} activeOpacity={0.8}>
-              <View style={[styles.tipIconContainer, { backgroundColor: '#4A90E2' }]}>
-                <Ionicons name="water" size={28} color="#FFFFFF" />
+            <TouchableOpacity style={styles.recentPatientCard} activeOpacity={0.7}>
+              <View style={[styles.patientTypeTag, { backgroundColor: '#4A90E2' }]}>
+                <Text style={styles.patientTypeText}>{translations.pregnant}</Text>
               </View>
-              <View style={styles.tipContent}>
-                <Text style={styles.tipTitle}>{translations.drinkWater}</Text>
-                <Text style={styles.tipDescription}>
-                  {translations.waterTip}
-                </Text>
-              </View>
+              <Text style={styles.recentPatientName}>পিঙ্কি বিশ্বাস</Text>
+              <Text style={styles.recentPatientDate}>{translations.today}</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.tipCard} activeOpacity={0.8}>
-              <View style={[styles.tipIconContainer, { backgroundColor: '#FF9500' }]}>
-                <Ionicons name="nutrition" size={28} color="#FFFFFF" />
+            <TouchableOpacity style={styles.recentPatientCard} activeOpacity={0.7}>
+              <View style={[styles.patientTypeTag, { backgroundColor: '#FF9500' }]}>
+                <Text style={styles.patientTypeText}>{translations.newborn}</Text>
               </View>
-              <View style={styles.tipContent}>
-                <Text style={styles.tipTitle}>{translations.childNutrition}</Text>
-                <Text style={styles.tipDescription}>
-                  {translations.nutritionTip}
-                </Text>
-              </View>
+              <Text style={styles.recentPatientName}>অনিতা দাস</Text>
+              <Text style={styles.recentPatientDate}>{translations.today}</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.tipCard} activeOpacity={0.8}>
-              <View style={[styles.tipIconContainer, { backgroundColor: '#34C759' }]}>
-                <Ionicons name="medkit" size={28} color="#FFFFFF" />
+            <TouchableOpacity style={styles.recentPatientCard} activeOpacity={0.7}>
+              <View style={[styles.patientTypeTag, { backgroundColor: '#34C759' }]}>
+                <Text style={styles.patientTypeText}>{translations.child}</Text>
               </View>
-              <View style={styles.tipContent}>
-                <Text style={styles.tipTitle}>{translations.immunizationSchedule}</Text>
-                <Text style={styles.tipDescription}>
-                  {translations.scheduleTip}
-                </Text>
-              </View>
+              <Text style={styles.recentPatientName}>রাজু সিং</Text>
+              <Text style={styles.recentPatientDate}>{translations.yesterday}</Text>
             </TouchableOpacity>
           </ScrollView>
         </View>
 
+       
         {/* Daily Status Card */}
         <View style={styles.statusSection}>
           <StatusCard
@@ -667,6 +648,45 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666666',
   },
+  appointmentActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  completeButton: {
+    backgroundColor: '#F0F7FF',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+    marginRight: 10,
+  },
+  completeButtonText: {
+    fontSize: 12,
+    color: '#4A90E2',
+    fontWeight: '500',
+  },
+  upcomingAppointment: {
+    backgroundColor: '#FFFFFF',
+    borderLeftWidth: 0,
+  },
+  dateContainer: {
+    width: 60,
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  dateDay: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333333',
+  },
+  dateMonth: {
+    fontSize: 14,
+    color: '#666666',
+  },
+  dateLabel: {
+    fontSize: 12,
+    color: '#999999',
+    marginTop: 2,
+  },
 
   // Quick Actions Styles
   quickActionsSection: {
@@ -709,49 +729,115 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  // Tips Styles
-  tipsSection: {
+  // Recent Patients Styles
+  recentPatientsSection: {
     paddingHorizontal: 20,
     marginBottom: 24,
   },
-  tipsScrollContent: {
+  recentPatientsScroll: {
     paddingVertical: 10,
     paddingRight: 20,
   },
-  tipCard: {
-    width: 280,
+  recentPatientCard: {
+    width: 150,
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
-    marginRight: 16,
+    marginRight: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
-    flexDirection: 'row',
   },
-  tipIconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
+  patientTypeTag: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    marginBottom: 8,
   },
-  tipContent: {
-    flex: 1,
+  patientTypeText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
   },
-  tipTitle: {
+  recentPatientName: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#333333',
-    marginBottom: 8,
+    marginBottom: 4,
   },
-  tipDescription: {
+  recentPatientDate: {
+    fontSize: 12,
+    color: '#666666',
+  },
+
+  // Pending Visits Styles
+  pendingVisitsSection: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
+  },
+  pendingVisitsList: {
+    marginTop: 10,
+  },
+  pendingVisitCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  pendingVisitContent: {
+    flex: 1,
+  },
+  pendingVisitName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333333',
+    marginBottom: 4,
+  },
+  pendingVisitInfo: {
     fontSize: 14,
     color: '#666666',
-    lineHeight: 20,
+  },
+  scheduleButton: {
+    backgroundColor: '#4A90E2',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  scheduleButtonText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+
+ 
+  
+  // Action Center Banner
+  actionCenterBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#4A90E2',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    marginHorizontal: 20,
+    marginBottom: 16,
+  },
+  actionCenterText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginLeft: 10,
   },
 
   // Status Section
@@ -776,11 +862,7 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
 
-  // Recent Patients Styles
-  recentPatientsSection: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
+  // Section Styles
   sectionHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
