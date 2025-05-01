@@ -9,6 +9,8 @@ import BengaliTextInput from '@/components/BengaliTextInput';
 import PatientCard from '@/components/PatientCard';
 import BottomNavBar from '@/components/BottomNavBar';
 import VoiceInputButton from '@/components/VoiceInputButton';
+import LanguageToggle from '@/components/LanguageToggle';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function SearchScreen() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -19,6 +21,29 @@ export default function SearchScreen() {
   const [searching, setSearching] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const { isEnglish } = useLanguage();
+
+  // Text translations
+  const translations = {
+    searchByName: isEnglish ? 'Search by Name' : BengaliText.SEARCH_BY_NAME,
+    name: isEnglish ? 'Name' : 'নাম',
+    phone: isEnglish ? 'Phone' : 'ফোন',
+    id: isEnglish ? 'ID' : 'আইডি',
+    searchByNamePlaceholder: isEnglish ? 'Search by name' : 'নাম দিয়ে খুঁজুন',
+    searchByPhonePlaceholder: isEnglish ? 'Search by phone number' : 'ফোন নম্বর দিয়ে খুঁজুন',
+    searchByIdPlaceholder: isEnglish ? 'Search by ID' : 'আইডি দিয়ে খুঁজুন',
+    searchPatient: isEnglish ? 'Search Patient' : BengaliText.SEARCH_PATIENT,
+    listening: isEnglish ? 'Listening' : BengaliText.LISTENING,
+    processing: isEnglish ? 'Processing' : BengaliText.PROCESSING,
+    all: isEnglish ? 'All' : 'সব',
+    pregnant: isEnglish ? 'Pregnant' : BengaliText.PREGNANT,
+    newborn: isEnglish ? 'Newborn' : BengaliText.NEWBORN,
+    child: isEnglish ? 'Child' : BengaliText.CHILD,
+    patientsFound: isEnglish ? 'patients found' : 'জন পেশেন্ট পাওয়া গেছে',
+    noSearchResults: isEnglish ? 'No search results found' : BengaliText.NO_SEARCH_RESULTS,
+    recentPatients: isEnglish ? 'Recent Patients' : BengaliText.RECENT_PATIENTS,
+    noRecentPatients: isEnglish ? 'No recent patients' : BengaliText.NO_RECENT_PATIENTS,
+  };
 
   useEffect(() => {
     // In a real implementation, we would fetch recent patients from a database
@@ -57,15 +82,15 @@ export default function SearchScreen() {
         birthDate: '২০২০-০২-১০',
       },
     ];
-    
+
     setRecentPatients(mockRecentPatients);
   }, []);
 
   const handleSearch = () => {
     if (!searchQuery) return;
-    
+
     setSearching(true);
-    
+
     // Simulate search delay
     setTimeout(() => {
       // In a real app, this would search a database
@@ -79,7 +104,7 @@ export default function SearchScreen() {
         }
         return false;
       });
-      
+
       setSearchResults(results);
       setSearching(false);
     }, 1000);
@@ -92,12 +117,12 @@ export default function SearchScreen() {
 
   const handleStartRecording = () => {
     setIsRecording(true);
-    
+
     // Simulate voice recognition
     setTimeout(() => {
       setIsRecording(false);
       setIsProcessing(true);
-      
+
       // Simulate processing
       setTimeout(() => {
         setIsProcessing(false);
@@ -118,8 +143,8 @@ export default function SearchScreen() {
     });
   };
 
-  const filteredResults = activeFilter === 'all' 
-    ? searchResults 
+  const filteredResults = activeFilter === 'all'
+    ? searchResults
     : searchResults.filter(patient => patient.type === activeFilter);
 
   return (
@@ -127,7 +152,10 @@ export default function SearchScreen() {
       <View style={styles.content}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>{BengaliText.SEARCH_BY_NAME}</Text>
+          <View style={styles.headerRow}>
+            <Text style={styles.headerTitle}>{translations.searchByName}</Text>
+            <LanguageToggle style={styles.languageToggle} />
+          </View>
         </View>
 
         {/* Search Type Selector */}
@@ -140,19 +168,19 @@ export default function SearchScreen() {
               ]}
               onPress={() => setSearchType('name')}
             >
-              <Ionicons 
-                name="person" 
-                size={20} 
-                color={searchType === 'name' ? '#FFFFFF' : '#666666'} 
+              <Ionicons
+                name="person"
+                size={20}
+                color={searchType === 'name' ? '#FFFFFF' : '#666666'}
               />
               <Text style={[
                 styles.searchTypeText,
                 searchType === 'name' && styles.activeSearchTypeText
               ]}>
-                নাম
+                {translations.name}
               </Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={[
                 styles.searchTypeButton,
@@ -160,19 +188,19 @@ export default function SearchScreen() {
               ]}
               onPress={() => setSearchType('phone')}
             >
-              <Ionicons 
-                name="call" 
-                size={20} 
-                color={searchType === 'phone' ? '#FFFFFF' : '#666666'} 
+              <Ionicons
+                name="call"
+                size={20}
+                color={searchType === 'phone' ? '#FFFFFF' : '#666666'}
               />
               <Text style={[
                 styles.searchTypeText,
                 searchType === 'phone' && styles.activeSearchTypeText
               ]}>
-                ফোন
+                {translations.phone}
               </Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={[
                 styles.searchTypeButton,
@@ -180,16 +208,16 @@ export default function SearchScreen() {
               ]}
               onPress={() => setSearchType('id')}
             >
-              <Ionicons 
-                name="card" 
-                size={20} 
-                color={searchType === 'id' ? '#FFFFFF' : '#666666'} 
+              <Ionicons
+                name="card"
+                size={20}
+                color={searchType === 'id' ? '#FFFFFF' : '#666666'}
               />
               <Text style={[
                 styles.searchTypeText,
                 searchType === 'id' && styles.activeSearchTypeText
               ]}>
-                আইডি
+                {translations.id}
               </Text>
             </TouchableOpacity>
           </ScrollView>
@@ -204,55 +232,55 @@ export default function SearchScreen() {
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 placeholder={
-                  searchType === 'name' ? 'নাম দিয়ে খুঁজুন' :
-                  searchType === 'phone' ? 'ফোন নম্বর দিয়ে খুঁজুন' :
-                  'আইডি দিয়ে খুঁজুন'
+                  searchType === 'name' ? translations.searchByNamePlaceholder :
+                  searchType === 'phone' ? translations.searchByPhonePlaceholder :
+                  translations.searchByIdPlaceholder
                 }
                 style={styles.searchInput}
               />
               {searchQuery ? (
-                <TouchableOpacity 
-                  style={styles.clearButton} 
+                <TouchableOpacity
+                  style={styles.clearButton}
                   onPress={handleClearSearch}
                 >
                   <Ionicons name="close-circle" size={24} color="#999999" />
                 </TouchableOpacity>
               ) : null}
             </View>
-            
+
             <View style={styles.searchButtonsContainer}>
               <BengaliButton
-                title={BengaliText.SEARCH_PATIENT}
+                title={translations.searchPatient}
                 onPress={() => handleSearch()}
                 loading={searching}
                 disabled={!searchQuery}
                 style={styles.searchButton}
               />
-              
-              <TouchableOpacity 
+
+              <TouchableOpacity
                 style={styles.voiceSearchButton}
                 onPress={handleStartRecording}
                 disabled={isRecording || isProcessing}
               >
-                <Ionicons 
-                  name={isRecording ? "mic" : "mic-outline"} 
-                  size={24} 
-                  color="#FFFFFF" 
+                <Ionicons
+                  name={isRecording ? "mic" : "mic-outline"}
+                  size={24}
+                  color="#FFFFFF"
                 />
               </TouchableOpacity>
             </View>
           </View>
-          
+
           {isRecording && (
             <View style={styles.recordingIndicator}>
-              <Text style={styles.recordingText}>{BengaliText.LISTENING}...</Text>
+              <Text style={styles.recordingText}>{translations.listening}...</Text>
               <View style={styles.pulsatingDot} />
             </View>
           )}
-          
+
           {isProcessing && (
             <View style={styles.processingIndicator}>
-              <Text style={styles.processingText}>{BengaliText.PROCESSING}...</Text>
+              <Text style={styles.processingText}>{translations.processing}...</Text>
             </View>
           )}
         </View>
@@ -261,39 +289,39 @@ export default function SearchScreen() {
         {searchResults.length > 0 && (
           <View style={styles.filterContainer}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.filterTab, activeFilter === 'all' && styles.activeFilterTab]}
                 onPress={() => setActiveFilter('all')}
               >
                 <Text style={[styles.filterText, activeFilter === 'all' && styles.activeFilterText]}>
-                  সব
+                  {translations.all}
                 </Text>
               </TouchableOpacity>
-              
-              <TouchableOpacity 
+
+              <TouchableOpacity
                 style={[styles.filterTab, activeFilter === 'pregnant' && styles.activeFilterTab]}
                 onPress={() => setActiveFilter('pregnant')}
               >
                 <Text style={[styles.filterText, activeFilter === 'pregnant' && styles.activeFilterText]}>
-                  {BengaliText.PREGNANT}
+                  {translations.pregnant}
                 </Text>
               </TouchableOpacity>
-              
-              <TouchableOpacity 
+
+              <TouchableOpacity
                 style={[styles.filterTab, activeFilter === 'newborn' && styles.activeFilterTab]}
                 onPress={() => setActiveFilter('newborn')}
               >
                 <Text style={[styles.filterText, activeFilter === 'newborn' && styles.activeFilterText]}>
-                  {BengaliText.NEWBORN}
+                  {translations.newborn}
                 </Text>
               </TouchableOpacity>
-              
-              <TouchableOpacity 
+
+              <TouchableOpacity
                 style={[styles.filterTab, activeFilter === 'child' && styles.activeFilterTab]}
                 onPress={() => setActiveFilter('child')}
               >
                 <Text style={[styles.filterText, activeFilter === 'child' && styles.activeFilterText]}>
-                  {BengaliText.CHILD}
+                  {translations.child}
                 </Text>
               </TouchableOpacity>
             </ScrollView>
@@ -305,11 +333,11 @@ export default function SearchScreen() {
           {searchQuery && !searching ? (
             <>
               <Text style={styles.resultsTitle}>
-                {filteredResults.length > 0 
-                  ? `${filteredResults.length} জন পেশেন্ট পাওয়া গেছে` 
-                  : BengaliText.NO_SEARCH_RESULTS}
+                {filteredResults.length > 0
+                  ? `${filteredResults.length} ${translations.patientsFound}`
+                  : translations.noSearchResults}
               </Text>
-              
+
               {filteredResults.length > 0 ? (
                 <FlatList
                   data={filteredResults}
@@ -327,7 +355,7 @@ export default function SearchScreen() {
                 <View style={styles.emptyResultsContainer}>
                   <Ionicons name="search" size={64} color="#CCCCCC" />
                   <Text style={styles.emptyResultsText}>
-                    {BengaliText.NO_SEARCH_RESULTS}
+                    {translations.noSearchResults}
                   </Text>
                 </View>
               )}
@@ -335,9 +363,9 @@ export default function SearchScreen() {
           ) : (
             <>
               <Text style={styles.resultsTitle}>
-                {BengaliText.RECENT_PATIENTS}
+                {translations.recentPatients}
               </Text>
-              
+
               {recentPatients.length > 0 ? (
                 <FlatList
                   data={recentPatients}
@@ -355,7 +383,7 @@ export default function SearchScreen() {
                 <View style={styles.emptyResultsContainer}>
                   <Ionicons name="people" size={64} color="#CCCCCC" />
                   <Text style={styles.emptyResultsText}>
-                    {BengaliText.NO_RECENT_PATIENTS}
+                    {translations.noRecentPatients}
                   </Text>
                 </View>
               )}
@@ -363,7 +391,7 @@ export default function SearchScreen() {
           )}
         </View>
       </View>
-      
+
       {/* Bottom Navigation Bar */}
       <BottomNavBar />
     </SafeAreaView>
@@ -384,10 +412,18 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     paddingHorizontal: 20,
   },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#333333',
+  },
+  languageToggle: {
+    marginLeft: 10,
   },
   searchTypeContainer: {
     paddingHorizontal: 20,

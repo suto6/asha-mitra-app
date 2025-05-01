@@ -5,6 +5,8 @@ import { PieChart, BarChart } from 'react-native-chart-kit';
 
 import BengaliText from '@/constants/BengaliText';
 import BottomNavBar from '@/components/BottomNavBar';
+import LanguageToggle from '@/components/LanguageToggle';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -13,6 +15,42 @@ export default function StatsScreen() {
   const [selectedArea, setSelectedArea] = useState('all');
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({});
+  const { isEnglish } = useLanguage();
+
+  // Text translations
+  const translations = {
+    title: isEnglish ? 'Reports' : BengaliText.REPORTS,
+    subtitle: isEnglish ? 'Monthly Statistics' : 'মাসিক পরিসংখ্যান',
+    weekly: isEnglish ? 'Weekly' : 'সাপ্তাহিক',
+    monthly: isEnglish ? 'Monthly' : 'মাসিক',
+    quarterly: isEnglish ? 'Quarterly' : 'ত্রৈমাসিক',
+    yearly: isEnglish ? 'Yearly' : 'বার্ষিক',
+    allAreas: isEnglish ? 'All Areas' : 'সব এলাকা',
+    northVillage: isEnglish ? 'North Village' : 'উত্তর গ্রাম',
+    southVillage: isEnglish ? 'South Village' : 'দক্ষিণ গ্রাম',
+    eastVillage: isEnglish ? 'East Village' : 'পূর্ব গ্রাম',
+    loading: isEnglish ? 'Loading statistics...' : 'পরিসংখ্যান লোড হচ্ছে...',
+    monthlySummary: isEnglish ? 'Monthly Summary' : 'মাসিক সারাংশ',
+    ancVisits: isEnglish ? 'ANC Visits' : 'ANC পরিদর্শন',
+    deliveries: isEnglish ? 'Deliveries' : 'প্রসব',
+    immunizations: isEnglish ? 'Immunizations' : 'টিকাদান',
+    progress: isEnglish ? 'Progress' : 'অগ্রগতি',
+    ironTablets: isEnglish ? 'Iron Tablets Given' : 'আয়রন ট্যাবলেট প্রদান',
+    pncCheckups: isEnglish ? 'PNC Checkups Completed' : 'PNC চেকআপ সম্পন্ন',
+    pregnantWomenByTrimester: isEnglish ? 'Pregnant Women by Trimester' : 'ত্রৈমাসিক অনুসারে গর্ভবতী মহিলা',
+    riskCasesIdentified: isEnglish ? 'Risk Cases Identified' : 'চিহ্নিত ঝুঁকিপূর্ণ কেস',
+    childrenVaccinationStatus: isEnglish ? 'Children Vaccination Status' : 'শিশুদের টিকাদান অবস্থা',
+    monthlyTrend: isEnglish ? 'Monthly Trend' : 'মাসিক প্রবণতা',
+    firstTrimester: isEnglish ? '1st Trimester' : '১ম ত্রৈমাসিক',
+    secondTrimester: isEnglish ? '2nd Trimester' : '২য় ত্রৈমাসিক',
+    thirdTrimester: isEnglish ? '3rd Trimester' : '৩য় ত্রৈমাসিক',
+    highRisk: isEnglish ? 'High Risk' : 'উচ্চ ঝুঁকি',
+    mediumRisk: isEnglish ? 'Medium Risk' : 'মাঝারি ঝুঁকি',
+    lowRisk: isEnglish ? 'Low Risk' : 'কম ঝুঁকি',
+    fullyVaccinated: isEnglish ? 'Fully Vaccinated' : 'সম্পূর্ণ টিকাপ্রাপ্ত',
+    partiallyVaccinated: isEnglish ? 'Partially Vaccinated' : 'আংশিক টিকাপ্রাপ্ত',
+    notVaccinated: isEnglish ? 'Not Vaccinated' : 'টিকা দেওয়া হয়নি',
+  };
 
   useEffect(() => {
     // In a real app, this would fetch stats from a database
@@ -25,22 +63,22 @@ export default function StatsScreen() {
         ironTablets: 75, // percentage
         pncCheckups: 80, // percentage
         pregnantWomen: [
-          { name: '1st Trimester', population: 8, color: '#FF9F40' },
-          { name: '2nd Trimester', population: 12, color: '#4BC0C0' },
-          { name: '3rd Trimester', population: 6, color: '#36A2EB' },
+          { name: translations.firstTrimester, population: 8, color: '#FF9F40' },
+          { name: translations.secondTrimester, population: 12, color: '#4BC0C0' },
+          { name: translations.thirdTrimester, population: 6, color: '#36A2EB' },
         ],
         riskCases: [
-          { name: 'High Risk', population: 3, color: '#FF6384' },
-          { name: 'Medium Risk', population: 7, color: '#FFCD56' },
-          { name: 'Low Risk', population: 16, color: '#4BC0C0' },
+          { name: translations.highRisk, population: 3, color: '#FF6384' },
+          { name: translations.mediumRisk, population: 7, color: '#FFCD56' },
+          { name: translations.lowRisk, population: 16, color: '#4BC0C0' },
         ],
         vaccinations: [
-          { name: 'Fully Vaccinated', population: 22, color: '#4BC0C0' },
-          { name: 'Partially Vaccinated', population: 8, color: '#FFCD56' },
-          { name: 'Not Vaccinated', population: 4, color: '#FF6384' },
+          { name: translations.fullyVaccinated, population: 22, color: '#4BC0C0' },
+          { name: translations.partiallyVaccinated, population: 8, color: '#FFCD56' },
+          { name: translations.notVaccinated, population: 4, color: '#FF6384' },
         ],
         monthlyData: {
-          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+          labels: isEnglish ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'] : ['জানু', 'ফেব্রু', 'মার্চ', 'এপ্রিল', 'মে', 'জুন'],
           datasets: [
             {
               data: [20, 45, 28, 80, 99, 43],
@@ -49,14 +87,14 @@ export default function StatsScreen() {
         }
       }
     };
-    
+
     setStats(mockStats);
     setLoading(false);
   }, []);
 
   const renderPieChart = (data, title) => {
     if (!data) return null;
-    
+
     return (
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>{title}</Text>
@@ -81,7 +119,7 @@ export default function StatsScreen() {
 
   const renderBarChart = (data, title) => {
     if (!data) return null;
-    
+
     return (
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>{title}</Text>
@@ -119,11 +157,11 @@ export default function StatsScreen() {
           <Text style={styles.progressPercentage}>{percentage}%</Text>
         </View>
         <View style={styles.progressBarContainer}>
-          <View 
+          <View
             style={[
-              styles.progressBar, 
+              styles.progressBar,
               { width: `${percentage}%`, backgroundColor: color }
-            ]} 
+            ]}
           />
         </View>
       </View>
@@ -149,8 +187,11 @@ export default function StatsScreen() {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>{BengaliText.REPORTS}</Text>
-          <Text style={styles.headerSubtitle}>Monthly Statistics</Text>
+          <View style={styles.headerRow}>
+            <Text style={styles.headerTitle}>{translations.title}</Text>
+            <LanguageToggle style={styles.languageToggle} />
+          </View>
+          <Text style={styles.headerSubtitle}>{translations.subtitle}</Text>
         </View>
 
         {/* Period Selector */}
@@ -167,10 +208,10 @@ export default function StatsScreen() {
                 styles.selectorButtonText,
                 selectedPeriod === 'week' && styles.selectedSelectorButtonText
               ]}>
-                Weekly
+                {translations.weekly}
               </Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={[
                 styles.selectorButton,
@@ -182,10 +223,10 @@ export default function StatsScreen() {
                 styles.selectorButtonText,
                 selectedPeriod === 'month' && styles.selectedSelectorButtonText
               ]}>
-                Monthly
+                {translations.monthly}
               </Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={[
                 styles.selectorButton,
@@ -197,10 +238,10 @@ export default function StatsScreen() {
                 styles.selectorButtonText,
                 selectedPeriod === 'quarter' && styles.selectedSelectorButtonText
               ]}>
-                Quarterly
+                {translations.quarterly}
               </Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={[
                 styles.selectorButton,
@@ -212,7 +253,7 @@ export default function StatsScreen() {
                 styles.selectorButtonText,
                 selectedPeriod === 'year' && styles.selectedSelectorButtonText
               ]}>
-                Yearly
+                {translations.yearly}
               </Text>
             </TouchableOpacity>
           </ScrollView>
@@ -232,10 +273,10 @@ export default function StatsScreen() {
                 styles.selectorButtonText,
                 selectedArea === 'all' && styles.selectedSelectorButtonText
               ]}>
-                All Areas
+                {translations.allAreas}
               </Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={[
                 styles.selectorButton,
@@ -247,10 +288,10 @@ export default function StatsScreen() {
                 styles.selectorButtonText,
                 selectedArea === 'north' && styles.selectedSelectorButtonText
               ]}>
-                North Village
+                {translations.northVillage}
               </Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={[
                 styles.selectorButton,
@@ -262,10 +303,10 @@ export default function StatsScreen() {
                 styles.selectorButtonText,
                 selectedArea === 'south' && styles.selectedSelectorButtonText
               ]}>
-                South Village
+                {translations.southVillage}
               </Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={[
                 styles.selectorButton,
@@ -277,7 +318,7 @@ export default function StatsScreen() {
                 styles.selectorButtonText,
                 selectedArea === 'east' && styles.selectedSelectorButtonText
               ]}>
-                East Village
+                {translations.eastVillage}
               </Text>
             </TouchableOpacity>
           </ScrollView>
@@ -285,83 +326,83 @@ export default function StatsScreen() {
 
         {loading ? (
           <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>Loading statistics...</Text>
+            <Text style={styles.loadingText}>{translations.loading}</Text>
           </View>
         ) : (
           <View style={styles.statsContainer}>
             {/* Summary Stats */}
             <View style={styles.summaryContainer}>
-              <Text style={styles.sectionTitle}>Monthly Summary</Text>
-              
+              <Text style={styles.sectionTitle}>{translations.monthlySummary}</Text>
+
               <View style={styles.statsGrid}>
                 {renderStatCard(
                   stats.month?.ancVisits || 0,
-                  'ANC Visits',
+                  translations.ancVisits,
                   'woman',
                   '#4A90E2'
                 )}
-                
+
                 {renderStatCard(
                   stats.month?.deliveries || 0,
-                  'Deliveries',
+                  translations.deliveries,
                   'happy',
                   '#FF9500'
                 )}
-                
+
                 {renderStatCard(
                   stats.month?.immunizations || 0,
-                  'Immunizations',
+                  translations.immunizations,
                   'medkit',
                   '#34C759'
                 )}
               </View>
             </View>
-            
+
             {/* Progress Bars */}
             <View style={styles.progressSection}>
-              <Text style={styles.sectionTitle}>Progress</Text>
-              
+              <Text style={styles.sectionTitle}>{translations.progress}</Text>
+
               {renderProgressBar(
                 stats.month?.ironTablets || 0,
-                'Iron Tablets Given',
+                translations.ironTablets,
                 '#4A90E2'
               )}
-              
+
               {renderProgressBar(
                 stats.month?.pncCheckups || 0,
-                'PNC Checkups Completed',
+                translations.pncCheckups,
                 '#FF9500'
               )}
             </View>
-            
+
             {/* Pie Charts */}
             {renderPieChart(
               stats.month?.pregnantWomen,
-              'Pregnant Women by Trimester'
+              translations.pregnantWomenByTrimester
             )}
-            
+
             {renderPieChart(
               stats.month?.riskCases,
-              'Risk Cases Identified'
+              translations.riskCasesIdentified
             )}
-            
+
             {renderPieChart(
               stats.month?.vaccinations,
-              'Children Vaccination Status'
+              translations.childrenVaccinationStatus
             )}
-            
+
             {/* Bar Chart */}
             {renderBarChart(
               stats.month?.monthlyData,
-              'Monthly Trend'
+              translations.monthlyTrend
             )}
           </View>
         )}
-        
+
         {/* Extra space for bottom nav */}
         <View style={styles.bottomNavSpace} />
       </ScrollView>
-      
+
       {/* Bottom Navigation Bar */}
       <BottomNavBar />
     </SafeAreaView>
@@ -381,15 +422,23 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     paddingHorizontal: 20,
   },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#333333',
-    marginBottom: 4,
   },
   headerSubtitle: {
     fontSize: 16,
     color: '#666666',
+  },
+  languageToggle: {
+    marginLeft: 10,
   },
   selectorContainer: {
     paddingHorizontal: 20,

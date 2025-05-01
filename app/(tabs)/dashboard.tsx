@@ -3,14 +3,40 @@ import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } fr
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import StatusCard from '@/components/StatusCard';
 import MeetingItem from '@/components/MeetingItem';
 import HealthDataCard from '@/components/HealthDataCard';
 import BottomNavBar from '@/components/BottomNavBar';
+import LanguageToggle from '@/components/LanguageToggle';
 import BengaliText from '@/constants/BengaliText';
 
 export default function DashboardScreen() {
   const { userProfile, logout } = useAuth();
+  const { isEnglish } = useLanguage();
+
+  // Text translations
+  const translations = {
+    welcome: isEnglish ? 'Welcome' : 'স্বাগতম',
+    dailySummary: isEnglish ? 'Daily Summary' : 'দৈনিক সারাংশ',
+    ancCheckups: isEnglish ? 'ANC checkups pending' : 'ANC চেকআপ বাকি আছে',
+    immunizationDue: isEnglish ? 'immunization due today' : 'টিকাদান আজ বাকি আছে',
+    highRiskPregnant: isEnglish ? 'high risk pregnant woman' : 'উচ্চ ঝুঁকিপূর্ণ গর্ভবতী',
+    todaysAppointments: isEnglish ? 'Today\'s Appointments' : 'আজকের অ্যাপয়েন্টমেন্ট',
+    viewAll: isEnglish ? 'View All' : 'সব দেখুন',
+    ancCheckup: isEnglish ? 'ANC Checkup' : 'ANC চেকআপ',
+    immunization: isEnglish ? 'Immunization' : 'টিকাদান',
+    quickActions: isEnglish ? 'Quick Actions' : BengaliText.QUICK_ACTIONS,
+    addNewPatient: isEnglish ? 'Add New Patient' : BengaliText.ADD_NEW_PATIENT,
+    searchByName: isEnglish ? 'Search by Name' : BengaliText.SEARCH_BY_NAME,
+    tipsAndGuidelines: isEnglish ? 'Tips & Guidelines' : 'টিপস এবং গাইডলাইন',
+    drinkWater: isEnglish ? 'Drink plenty of water during pregnancy' : 'গর্ভাবস্থায় পর্যাপ্ত পানি পান করুন',
+    waterTip: isEnglish ? 'Pregnant women should drink at least 8-10 glasses of water daily.' : 'গর্ভবতী মহিলাদের প্রতিদিন কমপক্ষে ৮-১০ গ্লাস পানি পান করা উচিত।',
+    childNutrition: isEnglish ? 'Child Nutrition' : 'শিশুর পুষ্টি',
+    nutritionTip: isEnglish ? 'Babies should be exclusively breastfed for the first 6 months.' : '৬ মাস পর্যন্ত শিশুকে শুধুমাত্র মায়ের দুধ খাওয়ানো উচিত।',
+    immunizationSchedule: isEnglish ? 'Immunization Schedule' : 'টিকাদান সময়সূচি',
+    scheduleTip: isEnglish ? 'Ensure all vaccines are given on time from birth.' : 'শিশুর জন্মের পর থেকে সময়মত সব টিকা দেওয়া নিশ্চিত করুন।',
+  };
   // Define patient type
   interface Patient {
     id: string;
@@ -114,18 +140,21 @@ export default function DashboardScreen() {
               </View>
               <View>
                 <Text style={styles.welcomeText}>
-                  {userProfile?.name ? `${BengaliText.WELCOME}, ${userProfile.name}` : BengaliText.WELCOME}
+                  {translations.welcome}, {userProfile?.name || 'ASHA Mitra'}
                 </Text>
                 <Text style={styles.subtitle}>ASHA Mitra</Text>
               </View>
             </View>
-            <TouchableOpacity
-              style={styles.logoutButton}
-              onPress={handleLogout}
-              disabled={loading}
-            >
-              <Ionicons name="log-out-outline" size={24} color="#FFFFFF" />
-            </TouchableOpacity>
+            <View style={styles.headerActions}>
+              <LanguageToggle style={styles.languageToggle} />
+              <TouchableOpacity
+                style={styles.logoutButton}
+                onPress={handleLogout}
+                disabled={loading}
+              >
+                <Ionicons name="log-out-outline" size={24} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
@@ -179,19 +208,19 @@ export default function DashboardScreen() {
 
         {/* Daily Summary Card */}
         <View style={styles.summaryCard}>
-          <Text style={styles.sectionTitle}>দৈনিক সারাংশ</Text>
+          <Text style={styles.sectionTitle}>{translations.dailySummary}</Text>
           <View style={styles.summaryContent}>
             <View style={styles.summaryItem}>
               <Ionicons name="calendar-outline" size={24} color="#4A90E2" />
-              <Text style={styles.summaryText}>২ টি ANC চেকআপ বাকি আছে</Text>
+              <Text style={styles.summaryText}>২ টি {translations.ancCheckups}</Text>
             </View>
             <View style={styles.summaryItem}>
               <Ionicons name="medkit-outline" size={24} color="#FF9500" />
-              <Text style={styles.summaryText}>১ টি টিকাদান আজ বাকি আছে</Text>
+              <Text style={styles.summaryText}>১ টি {translations.immunizationDue}</Text>
             </View>
             <View style={styles.summaryItem}>
               <Ionicons name="warning-outline" size={24} color="#FF3B30" />
-              <Text style={styles.summaryText}>১ জন উচ্চ ঝুঁকিপূর্ণ গর্ভবতী</Text>
+              <Text style={styles.summaryText}>১ জন {translations.highRiskPregnant}</Text>
             </View>
           </View>
         </View>
@@ -199,12 +228,12 @@ export default function DashboardScreen() {
         {/* Upcoming Appointments */}
         <View style={styles.appointmentsSection}>
           <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>আজকের অ্যাপয়েন্টমেন্ট</Text>
+            <Text style={styles.sectionTitle}>{translations.todaysAppointments}</Text>
             <TouchableOpacity
               style={styles.viewAllButton}
               onPress={() => router.push('/patient/schedule' as any)}
             >
-              <Text style={styles.viewAllText}>সব দেখুন</Text>
+              <Text style={styles.viewAllText}>{translations.viewAll}</Text>
               <Ionicons name="chevron-forward" size={16} color="#4A90E2" />
             </TouchableOpacity>
           </View>
@@ -218,7 +247,7 @@ export default function DashboardScreen() {
               </View>
               <View style={styles.appointmentDetails}>
                 <Text style={styles.appointmentTitle}>পিঙ্কি বিশ্বাস</Text>
-                <Text style={styles.appointmentSubtitle}>ANC চেকআপ</Text>
+                <Text style={styles.appointmentSubtitle}>{translations.ancCheckup}</Text>
               </View>
               <Ionicons name="chevron-forward" size={24} color="#CCCCCC" />
             </TouchableOpacity>
@@ -231,7 +260,7 @@ export default function DashboardScreen() {
               </View>
               <View style={styles.appointmentDetails}>
                 <Text style={styles.appointmentTitle}>অনিতা দাস</Text>
-                <Text style={styles.appointmentSubtitle}>টিকাদান</Text>
+                <Text style={styles.appointmentSubtitle}>{translations.immunization}</Text>
               </View>
               <Ionicons name="chevron-forward" size={24} color="#CCCCCC" />
             </TouchableOpacity>
@@ -240,7 +269,7 @@ export default function DashboardScreen() {
 
         {/* Quick Actions */}
         <View style={styles.quickActionsSection}>
-          <Text style={styles.sectionTitle}>{BengaliText.QUICK_ACTIONS}</Text>
+          <Text style={styles.sectionTitle}>{translations.quickActions}</Text>
 
           <View style={styles.actionCardsContainer}>
             <TouchableOpacity
@@ -251,7 +280,7 @@ export default function DashboardScreen() {
               <View style={[styles.actionIconContainer, { backgroundColor: '#4CD964' }]}>
                 <Ionicons name="add-circle" size={28} color="#FFFFFF" />
               </View>
-              <Text style={styles.actionCardTitle}>{BengaliText.ADD_NEW_PATIENT}</Text>
+              <Text style={styles.actionCardTitle}>{translations.addNewPatient}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -262,14 +291,14 @@ export default function DashboardScreen() {
               <View style={[styles.actionIconContainer, { backgroundColor: '#4A90E2' }]}>
                 <Ionicons name="search" size={28} color="#FFFFFF" />
               </View>
-              <Text style={styles.actionCardTitle}>{BengaliText.SEARCH_BY_NAME}</Text>
+              <Text style={styles.actionCardTitle}>{translations.searchByName}</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Tips & Guidelines */}
         <View style={styles.tipsSection}>
-          <Text style={styles.sectionTitle}>টিপস এবং গাইডলাইন</Text>
+          <Text style={styles.sectionTitle}>{translations.tipsAndGuidelines}</Text>
 
           <ScrollView
             horizontal
@@ -281,9 +310,9 @@ export default function DashboardScreen() {
                 <Ionicons name="water" size={28} color="#FFFFFF" />
               </View>
               <View style={styles.tipContent}>
-                <Text style={styles.tipTitle}>গর্ভাবস্থায় পর্যাপ্ত পানি পান করুন</Text>
+                <Text style={styles.tipTitle}>{translations.drinkWater}</Text>
                 <Text style={styles.tipDescription}>
-                  গর্ভবতী মহিলাদের প্রতিদিন কমপক্ষে ৮-১০ গ্লাস পানি পান করা উচিত।
+                  {translations.waterTip}
                 </Text>
               </View>
             </TouchableOpacity>
@@ -293,9 +322,9 @@ export default function DashboardScreen() {
                 <Ionicons name="nutrition" size={28} color="#FFFFFF" />
               </View>
               <View style={styles.tipContent}>
-                <Text style={styles.tipTitle}>শিশুর পুষ্টি</Text>
+                <Text style={styles.tipTitle}>{translations.childNutrition}</Text>
                 <Text style={styles.tipDescription}>
-                  ৬ মাস পর্যন্ত শিশুকে শুধুমাত্র মায়ের দুধ খাওয়ানো উচিত।
+                  {translations.nutritionTip}
                 </Text>
               </View>
             </TouchableOpacity>
@@ -305,9 +334,9 @@ export default function DashboardScreen() {
                 <Ionicons name="medkit" size={28} color="#FFFFFF" />
               </View>
               <View style={styles.tipContent}>
-                <Text style={styles.tipTitle}>টিকাদান সময়সূচি</Text>
+                <Text style={styles.tipTitle}>{translations.immunizationSchedule}</Text>
                 <Text style={styles.tipDescription}>
-                  শিশুর জন্মের পর থেকে সময়মত সব টিকা দেওয়া নিশ্চিত করুন।
+                  {translations.scheduleTip}
                 </Text>
               </View>
             </TouchableOpacity>
@@ -453,6 +482,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: 'rgba(255, 255, 255, 0.8)',
     marginTop: 4,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  languageToggle: {
+    marginRight: 12,
   },
   logoutButton: {
     width: 48,

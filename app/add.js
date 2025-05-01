@@ -7,13 +7,60 @@ import BottomNavBar from '@/components/BottomNavBar';
 import BengaliTextInput from '@/components/BengaliTextInput';
 import BengaliButton from '@/components/BengaliButton';
 import VoiceInputButton from '@/components/VoiceInputButton';
+import LanguageToggle from '@/components/LanguageToggle';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function AddScreen() {
   const [activeTab, setActiveTab] = useState('pregnant');
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [saving, setSaving] = useState(false);
-  
+  const { isEnglish } = useLanguage();
+
+  // Text translations
+  const translations = {
+    addNewEntry: isEnglish ? 'Add New Entry' : 'নতুন এন্ট্রি যোগ করুন',
+    pregnant: isEnglish ? 'Pregnant' : 'গর্ভবতী',
+    postnatal: isEnglish ? 'Postnatal' : 'প্রসবোত্তর',
+    child: isEnglish ? 'Child' : 'শিশু',
+    speakNow: isEnglish ? 'Speak Now' : BengaliText.SPEAK_NOW,
+    voiceInfo: isEnglish ? 'Provide information using voice' : 'তথ্য ভয়েস দিয়ে দিন',
+    name: isEnglish ? 'Name' : 'নাম',
+    enterName: isEnglish ? 'Enter name' : 'নাম লিখুন',
+    age: isEnglish ? 'Age' : 'বয়স',
+    phone: isEnglish ? 'Phone Number' : 'ফোন নম্বর',
+    lmpDate: isEnglish ? 'Last Menstrual Period (LMP)' : 'শেষ মাসিকের তারিখ (LMP)',
+    eddDate: isEnglish ? 'Expected Delivery Date (EDD)' : 'সম্ভাব্য প্রসবের তারিখ (EDD)',
+    autoCalculated: isEnglish ? 'Auto calculated' : 'স্বয়ংক্রিয় গণনা',
+    weight: isEnglish ? 'Weight (kg)' : 'ওজন (কেজি)',
+    height: isEnglish ? 'Height (cm)' : 'উচ্চতা (সেমি)',
+    bloodPressure: isEnglish ? 'Blood Pressure' : 'ব্লাড প্রেসার',
+    bpExample: isEnglish ? 'Example: 120/80' : 'উদাহরণ: 120/80',
+    highRiskPregnancy: isEnglish ? 'High Risk Pregnancy' : 'উচ্চ ঝুঁকিপূর্ণ গর্ভাবস্থা',
+    notes: isEnglish ? 'Special Notes / Issues' : 'বিশেষ নোট / সমস্যা',
+    save: isEnglish ? 'Save' : 'সংরক্ষণ করুন',
+    setReminder: isEnglish ? 'Set reminder for next ANC visit' : 'পরবর্তী ANC পরিদর্শনের রিমাইন্ডার সেট করুন',
+    motherName: isEnglish ? 'Mother\'s Name' : 'মায়ের নাম',
+    deliveryDate: isEnglish ? 'Delivery Date' : 'প্রসবের তারিখ',
+    deliveryType: isEnglish ? 'Delivery Type:' : 'প্রসবের ধরন:',
+    normal: isEnglish ? 'Normal' : 'স্বাভাবিক',
+    cesarean: isEnglish ? 'Cesarean' : 'সিজারিয়ান',
+    babyWeight: isEnglish ? 'Baby\'s Weight (kg)' : 'শিশুর ওজন (কেজি)',
+    motherWeight: isEnglish ? 'Mother\'s Weight (kg)' : 'মায়ের ওজন (কেজি)',
+    setPncReminder: isEnglish ? 'Set reminder for next PNC visit' : 'পরবর্তী PNC পরিদর্শনের রিমাইন্ডার সেট করুন',
+    childName: isEnglish ? 'Child\'s Name' : 'শিশুর নাম',
+    dateOfBirth: isEnglish ? 'Date of Birth' : 'জন্ম তারিখ',
+    gender: isEnglish ? 'Gender:' : 'লিঙ্গ:',
+    boy: isEnglish ? 'Boy' : 'ছেলে',
+    girl: isEnglish ? 'Girl' : 'মেয়ে',
+    immunizationStatus: isEnglish ? 'Immunization Status:' : 'টিকাদান স্ট্যাটাস:',
+    selectStatus: isEnglish ? 'Select immunization status' : 'টিকাদান স্ট্যাটাস নির্বাচন করুন',
+    setImmunizationReminder: isEnglish ? 'Set reminder for next immunization' : 'পরবর্তী টিকাদানের রিমাইন্ডার সেট করুন',
+    pregnantInfo: isEnglish ? 'pregnant woman\'s information' : 'গর্ভবতী মহিলার তথ্য',
+    postnatalInfo: isEnglish ? 'postnatal information' : 'প্রসবোত্তর তথ্য',
+    childInfo: isEnglish ? 'child\'s information' : 'শিশুর তথ্য',
+  };
+
   // Form data states
   const [pregnantData, setPregnantData] = useState({
     name: '',
@@ -27,7 +74,7 @@ export default function AddScreen() {
     isHighRisk: false,
     notes: '',
   });
-  
+
   const [postnatalData, setPostnatalData] = useState({
     motherName: '',
     age: '',
@@ -39,7 +86,7 @@ export default function AddScreen() {
     bloodPressure: '',
     notes: '',
   });
-  
+
   const [childData, setChildData] = useState({
     name: '',
     motherName: '',
@@ -57,11 +104,11 @@ export default function AddScreen() {
     setTimeout(() => {
       setIsRecording(false);
       setIsProcessing(true);
-      
+
       // Simulate processing
       setTimeout(() => {
         setIsProcessing(false);
-        
+
         // Populate form based on active tab
         if (activeTab === 'pregnant') {
           setPregnantData({
@@ -99,11 +146,11 @@ export default function AddScreen() {
 
   const handleSave = () => {
     setSaving(true);
-    
+
     // Simulate saving
     setTimeout(() => {
       setSaving(false);
-      
+
       // Reset form based on active tab
       if (activeTab === 'pregnant') {
         setPregnantData({
@@ -142,7 +189,7 @@ export default function AddScreen() {
           notes: '',
         });
       }
-      
+
       // Show success message (in a real app)
       alert('Data saved successfully!');
     }, 1500);
@@ -163,7 +210,7 @@ export default function AddScreen() {
           onChangeText={(text) => setPregnantData({...pregnantData, name: text})}
           placeholder="নাম লিখুন"
         />
-        
+
         <View style={styles.rowFields}>
           <View style={styles.halfField}>
             <BengaliTextInput
@@ -184,7 +231,7 @@ export default function AddScreen() {
             />
           </View>
         </View>
-        
+
         <View style={styles.rowFields}>
           <View style={styles.halfField}>
             <BengaliTextInput
@@ -207,7 +254,7 @@ export default function AddScreen() {
             />
           </View>
         </View>
-        
+
         <View style={styles.rowFields}>
           <View style={styles.halfField}>
             <BengaliTextInput
@@ -228,14 +275,14 @@ export default function AddScreen() {
             />
           </View>
         </View>
-        
+
         <BengaliTextInput
           label="ব্লাড প্রেসার"
           value={pregnantData.bloodPressure}
           onChangeText={(text) => setPregnantData({...pregnantData, bloodPressure: text})}
           placeholder="উদাহরণ: 120/80"
         />
-        
+
         <View style={styles.checkboxContainer}>
           <TouchableOpacity
             style={styles.checkbox}
@@ -252,7 +299,7 @@ export default function AddScreen() {
           </TouchableOpacity>
           <Text style={styles.checkboxLabel}>উচ্চ ঝুঁকিপূর্ণ গর্ভাবস্থা</Text>
         </View>
-        
+
         <BengaliTextInput
           label="বিশেষ নোট / সমস্যা"
           value={pregnantData.notes}
@@ -261,7 +308,7 @@ export default function AddScreen() {
           multiline={true}
           numberOfLines={4}
         />
-        
+
         <View style={styles.buttonContainer}>
           <BengaliButton
             title="সংরক্ষণ করুন"
@@ -269,7 +316,7 @@ export default function AddScreen() {
             loading={saving}
             disabled={!pregnantData.name || !pregnantData.age}
           />
-          
+
           <View style={styles.reminderContainer}>
             <TouchableOpacity
               style={styles.reminderButton}
@@ -293,7 +340,7 @@ export default function AddScreen() {
           onChangeText={(text) => setPostnatalData({...postnatalData, motherName: text})}
           placeholder="মায়ের নাম লিখুন"
         />
-        
+
         <View style={styles.rowFields}>
           <View style={styles.halfField}>
             <BengaliTextInput
@@ -314,14 +361,14 @@ export default function AddScreen() {
             />
           </View>
         </View>
-        
+
         <BengaliTextInput
           label="প্রসবের তারিখ"
           value={postnatalData.deliveryDate}
           onChangeText={(text) => setPostnatalData({...postnatalData, deliveryDate: text})}
           placeholder="YYYY-MM-DD"
         />
-        
+
         <View style={styles.radioContainer}>
           <Text style={styles.radioLabel}>প্রসবের ধরন:</Text>
           <View style={styles.radioOptions}>
@@ -339,7 +386,7 @@ export default function AddScreen() {
               </View>
               <Text style={styles.radioText}>স্বাভাবিক</Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={styles.radioOption}
               onPress={() => setPostnatalData({...postnatalData, deliveryType: 'cesarean'})}
@@ -356,7 +403,7 @@ export default function AddScreen() {
             </TouchableOpacity>
           </View>
         </View>
-        
+
         <View style={styles.rowFields}>
           <View style={styles.halfField}>
             <BengaliTextInput
@@ -377,14 +424,14 @@ export default function AddScreen() {
             />
           </View>
         </View>
-        
+
         <BengaliTextInput
           label="ব্লাড প্রেসার"
           value={postnatalData.bloodPressure}
           onChangeText={(text) => setPostnatalData({...postnatalData, bloodPressure: text})}
           placeholder="উদাহরণ: 120/80"
         />
-        
+
         <BengaliTextInput
           label="বিশেষ নোট / সমস্যা"
           value={postnatalData.notes}
@@ -393,7 +440,7 @@ export default function AddScreen() {
           multiline={true}
           numberOfLines={4}
         />
-        
+
         <View style={styles.buttonContainer}>
           <BengaliButton
             title="সংরক্ষণ করুন"
@@ -401,7 +448,7 @@ export default function AddScreen() {
             loading={saving}
             disabled={!postnatalData.motherName || !postnatalData.deliveryDate}
           />
-          
+
           <View style={styles.reminderContainer}>
             <TouchableOpacity
               style={styles.reminderButton}
@@ -425,14 +472,14 @@ export default function AddScreen() {
           onChangeText={(text) => setChildData({...childData, name: text})}
           placeholder="শিশুর নাম লিখুন"
         />
-        
+
         <BengaliTextInput
           label="মায়ের নাম"
           value={childData.motherName}
           onChangeText={(text) => setChildData({...childData, motherName: text})}
           placeholder="মায়ের নাম লিখুন"
         />
-        
+
         <View style={styles.rowFields}>
           <View style={styles.halfField}>
             <BengaliTextInput
@@ -460,7 +507,7 @@ export default function AddScreen() {
                   </View>
                   <Text style={styles.radioText}>ছেলে</Text>
                 </TouchableOpacity>
-                
+
                 <TouchableOpacity
                   style={styles.radioOption}
                   onPress={() => setChildData({...childData, gender: 'মেয়ে'})}
@@ -479,7 +526,7 @@ export default function AddScreen() {
             </View>
           </View>
         </View>
-        
+
         <View style={styles.rowFields}>
           <View style={styles.halfField}>
             <BengaliTextInput
@@ -500,7 +547,7 @@ export default function AddScreen() {
             />
           </View>
         </View>
-        
+
         <View style={styles.dropdownContainer}>
           <Text style={styles.dropdownLabel}>টিকাদান স্ট্যাটাস:</Text>
           <View style={styles.dropdown}>
@@ -515,7 +562,7 @@ export default function AddScreen() {
             </TouchableOpacity>
           </View>
         </View>
-        
+
         <BengaliTextInput
           label="বিশেষ নোট / সমস্যা"
           value={childData.notes}
@@ -524,7 +571,7 @@ export default function AddScreen() {
           multiline={true}
           numberOfLines={4}
         />
-        
+
         <View style={styles.buttonContainer}>
           <BengaliButton
             title="সংরক্ষণ করুন"
@@ -532,7 +579,7 @@ export default function AddScreen() {
             loading={saving}
             disabled={!childData.name || !childData.dateOfBirth}
           />
-          
+
           <View style={styles.reminderContainer}>
             <TouchableOpacity
               style={styles.reminderButton}
@@ -552,7 +599,10 @@ export default function AddScreen() {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>নতুন এন্ট্রি যোগ করুন</Text>
+          <View style={styles.headerRow}>
+            <Text style={styles.headerTitle}>{translations.addNewEntry}</Text>
+            <LanguageToggle style={styles.languageToggle} />
+          </View>
         </View>
 
         {/* Tab Selector */}
@@ -561,62 +611,62 @@ export default function AddScreen() {
             style={[styles.tab, activeTab === 'pregnant' && styles.activeTab]}
             onPress={() => setActiveTab('pregnant')}
           >
-            <Ionicons 
-              name="woman" 
-              size={24} 
-              color={activeTab === 'pregnant' ? '#4A90E2' : '#666666'} 
+            <Ionicons
+              name="woman"
+              size={24}
+              color={activeTab === 'pregnant' ? '#4A90E2' : '#666666'}
             />
             <Text style={[
               styles.tabText,
               activeTab === 'pregnant' && styles.activeTabText
             ]}>
-              গর্ভবতী
+              {translations.pregnant}
             </Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             style={[styles.tab, activeTab === 'postnatal' && styles.activeTab]}
             onPress={() => setActiveTab('postnatal')}
           >
-            <Ionicons 
-              name="happy" 
-              size={24} 
-              color={activeTab === 'postnatal' ? '#FF9500' : '#666666'} 
+            <Ionicons
+              name="happy"
+              size={24}
+              color={activeTab === 'postnatal' ? '#FF9500' : '#666666'}
             />
             <Text style={[
               styles.tabText,
               activeTab === 'postnatal' && styles.activeTabText
             ]}>
-              প্রসবোত্তর
+              {translations.postnatal}
             </Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             style={[styles.tab, activeTab === 'child' && styles.activeTab]}
             onPress={() => setActiveTab('child')}
           >
-            <Ionicons 
-              name="body" 
-              size={24} 
-              color={activeTab === 'child' ? '#34C759' : '#666666'} 
+            <Ionicons
+              name="body"
+              size={24}
+              color={activeTab === 'child' ? '#34C759' : '#666666'}
             />
             <Text style={[
               styles.tabText,
               activeTab === 'child' && styles.activeTabText
             ]}>
-              শিশু
+              {translations.child}
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Voice Input Section */}
         <View style={styles.voiceSection}>
-          <Text style={styles.voiceTitle}>{BengaliText.SPEAK_NOW}</Text>
+          <Text style={styles.voiceTitle}>{translations.speakNow}</Text>
           <Text style={styles.voiceSubtitle}>
-            {activeTab === 'pregnant' ? 'গর্ভবতী মহিলার' : 
-             activeTab === 'postnatal' ? 'প্রসবোত্তর' : 'শিশুর'} তথ্য ভয়েস দিয়ে দিন
+            {activeTab === 'pregnant' ? translations.pregnantInfo :
+             activeTab === 'postnatal' ? translations.postnatalInfo : translations.childInfo} {translations.voiceInfo}
           </Text>
-          
+
           <View style={styles.voiceInputContainer}>
             <VoiceInputButton
               onStartRecording={handleStartRecording}
@@ -631,11 +681,11 @@ export default function AddScreen() {
         {activeTab === 'pregnant' && renderPregnantWomenForm()}
         {activeTab === 'postnatal' && renderPostnatalForm()}
         {activeTab === 'child' && renderChildForm()}
-        
+
         {/* Extra space for bottom nav */}
         <View style={styles.bottomNavSpace} />
       </ScrollView>
-      
+
       {/* Bottom Navigation Bar */}
       <BottomNavBar />
     </SafeAreaView>
@@ -655,10 +705,18 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     paddingHorizontal: 20,
   },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#333333',
+  },
+  languageToggle: {
+    marginLeft: 10,
   },
   tabContainer: {
     flexDirection: 'row',
