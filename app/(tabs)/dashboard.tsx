@@ -88,10 +88,7 @@ export default function DashboardScreen() {
     }
   };
 
-  const navigateToAddPatient = () => {
-    router.push('/(tabs)/add-patient');
-  };
-
+  // Navigation functions
   const navigateToSearchPatient = () => {
     router.push('/(tabs)/search-patient');
   };
@@ -180,109 +177,141 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* Main Menu Section */}
-        <View style={styles.mainMenuSection}>
-          <Text style={styles.sectionTitle}>{BengaliText.QUICK_ACTIONS}</Text>
-
-          <View style={styles.menuGrid}>
-            {/* Row 1 */}
-            <View style={styles.menuRow}>
-              <TouchableOpacity
-                style={styles.menuCard}
-                onPress={navigateToAddPatient}
-                activeOpacity={0.8}
-              >
-                <View style={[styles.menuIconContainer, { backgroundColor: '#4CD964' }]}>
-                  <Ionicons name="add-circle" size={32} color="#FFFFFF" />
-                </View>
-                <Text style={styles.menuCardTitle}>{BengaliText.ADD_NEW_PATIENT}</Text>
-                <Text style={styles.menuCardSubtitle}>Start voice input</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.menuCard}
-                onPress={() => router.push('/patient/list')}
-                activeOpacity={0.8}
-              >
-                <View style={[styles.menuIconContainer, { backgroundColor: '#FF9500' }]}>
-                  <Ionicons name="list" size={32} color="#FFFFFF" />
-                </View>
-                <Text style={styles.menuCardTitle}>{BengaliText.VIEW_ALL_PATIENTS}</Text>
-                <Text style={styles.menuCardSubtitle}>Filter by type</Text>
-              </TouchableOpacity>
+        {/* Daily Summary Card */}
+        <View style={styles.summaryCard}>
+          <Text style={styles.sectionTitle}>দৈনিক সারাংশ</Text>
+          <View style={styles.summaryContent}>
+            <View style={styles.summaryItem}>
+              <Ionicons name="calendar-outline" size={24} color="#4A90E2" />
+              <Text style={styles.summaryText}>২ টি ANC চেকআপ বাকি আছে</Text>
             </View>
-
-            {/* Row 2 */}
-            <View style={styles.menuRow}>
-              <TouchableOpacity
-                style={styles.menuCard}
-                onPress={navigateToSearchPatient}
-                activeOpacity={0.8}
-              >
-                <View style={[styles.menuIconContainer, { backgroundColor: '#4A90E2' }]}>
-                  <Ionicons name="search" size={32} color="#FFFFFF" />
-                </View>
-                <Text style={styles.menuCardTitle}>{BengaliText.SEARCH_BY_NAME}</Text>
-                <Text style={styles.menuCardSubtitle}>Voice/text search</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.menuCard}
-                onPress={() => router.push('/patient/risk-alerts')}
-                activeOpacity={0.8}
-              >
-                <View style={[styles.menuIconContainer, { backgroundColor: '#FF3B30' }]}>
-                  <Ionicons name="warning" size={32} color="#FFFFFF" />
-                </View>
-                <Text style={styles.menuCardTitle}>{BengaliText.RISK_ALERTS}</Text>
-                <Text style={styles.menuCardSubtitle}>Patients needing attention</Text>
-              </TouchableOpacity>
+            <View style={styles.summaryItem}>
+              <Ionicons name="medkit-outline" size={24} color="#FF9500" />
+              <Text style={styles.summaryText}>১ টি টিকাদান আজ বাকি আছে</Text>
             </View>
-
-            {/* Row 3 */}
-            <View style={styles.menuRow}>
-              <TouchableOpacity
-                style={styles.menuCard}
-                onPress={() => router.push('/patient/schedule')}
-                activeOpacity={0.8}
-              >
-                <View style={[styles.menuIconContainer, { backgroundColor: '#5856D6' }]}>
-                  <Ionicons name="calendar" size={32} color="#FFFFFF" />
-                </View>
-                <Text style={styles.menuCardTitle}>{BengaliText.SCHEDULE_CALENDAR}</Text>
-                <Text style={styles.menuCardSubtitle}>ANC visits, immunizations</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.menuCard}
-                onPress={() => router.push('/patient/reports')}
-                activeOpacity={0.8}
-              >
-                <View style={[styles.menuIconContainer, { backgroundColor: '#34C759' }]}>
-                  <Ionicons name="bar-chart" size={32} color="#FFFFFF" />
-                </View>
-                <Text style={styles.menuCardTitle}>{BengaliText.REPORTS}</Text>
-                <Text style={styles.menuCardSubtitle}>Monthly summary</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Row 4 */}
-            <View style={styles.menuRow}>
-              <TouchableOpacity
-                style={styles.menuCard}
-                onPress={() => router.push('/help/voice')}
-                activeOpacity={0.8}
-              >
-                <View style={[styles.menuIconContainer, { backgroundColor: '#007AFF' }]}>
-                  <Ionicons name="mic" size={32} color="#FFFFFF" />
-                </View>
-                <Text style={styles.menuCardTitle}>{BengaliText.VOICE_HELP}</Text>
-                <Text style={styles.menuCardSubtitle}>Tutorial in Bengali</Text>
-              </TouchableOpacity>
-
-              <View style={styles.menuCard} />
+            <View style={styles.summaryItem}>
+              <Ionicons name="warning-outline" size={24} color="#FF3B30" />
+              <Text style={styles.summaryText}>১ জন উচ্চ ঝুঁকিপূর্ণ গর্ভবতী</Text>
             </View>
           </View>
+        </View>
+
+        {/* Upcoming Appointments */}
+        <View style={styles.appointmentsSection}>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionTitle}>আজকের অ্যাপয়েন্টমেন্ট</Text>
+            <TouchableOpacity
+              style={styles.viewAllButton}
+              onPress={() => router.push('/patient/schedule' as any)}
+            >
+              <Text style={styles.viewAllText}>সব দেখুন</Text>
+              <Ionicons name="chevron-forward" size={16} color="#4A90E2" />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.appointmentsList}>
+            <TouchableOpacity style={styles.appointmentCard} activeOpacity={0.7}>
+              <View style={[styles.appointmentTypeIndicator, { backgroundColor: '#4A90E2' }]} />
+              <View style={styles.appointmentTimeContainer}>
+                <Text style={styles.appointmentTime}>10:00</Text>
+                <Text style={styles.appointmentTimeAMPM}>AM</Text>
+              </View>
+              <View style={styles.appointmentDetails}>
+                <Text style={styles.appointmentTitle}>পিঙ্কি বিশ্বাস</Text>
+                <Text style={styles.appointmentSubtitle}>ANC চেকআপ</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={24} color="#CCCCCC" />
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.appointmentCard} activeOpacity={0.7}>
+              <View style={[styles.appointmentTypeIndicator, { backgroundColor: '#FF9500' }]} />
+              <View style={styles.appointmentTimeContainer}>
+                <Text style={styles.appointmentTime}>11:30</Text>
+                <Text style={styles.appointmentTimeAMPM}>AM</Text>
+              </View>
+              <View style={styles.appointmentDetails}>
+                <Text style={styles.appointmentTitle}>অনিতা দাস</Text>
+                <Text style={styles.appointmentSubtitle}>টিকাদান</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={24} color="#CCCCCC" />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Quick Actions */}
+        <View style={styles.quickActionsSection}>
+          <Text style={styles.sectionTitle}>{BengaliText.QUICK_ACTIONS}</Text>
+
+          <View style={styles.actionCardsContainer}>
+            <TouchableOpacity
+              style={styles.actionCard}
+              onPress={() => router.push('/add' as any)}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.actionIconContainer, { backgroundColor: '#4CD964' }]}>
+                <Ionicons name="add-circle" size={28} color="#FFFFFF" />
+              </View>
+              <Text style={styles.actionCardTitle}>{BengaliText.ADD_NEW_PATIENT}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionCard}
+              onPress={() => router.push('/search' as any)}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.actionIconContainer, { backgroundColor: '#4A90E2' }]}>
+                <Ionicons name="search" size={28} color="#FFFFFF" />
+              </View>
+              <Text style={styles.actionCardTitle}>{BengaliText.SEARCH_BY_NAME}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Tips & Guidelines */}
+        <View style={styles.tipsSection}>
+          <Text style={styles.sectionTitle}>টিপস এবং গাইডলাইন</Text>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.tipsScrollContent}
+          >
+            <TouchableOpacity style={styles.tipCard} activeOpacity={0.8}>
+              <View style={[styles.tipIconContainer, { backgroundColor: '#4A90E2' }]}>
+                <Ionicons name="water" size={28} color="#FFFFFF" />
+              </View>
+              <View style={styles.tipContent}>
+                <Text style={styles.tipTitle}>গর্ভাবস্থায় পর্যাপ্ত পানি পান করুন</Text>
+                <Text style={styles.tipDescription}>
+                  গর্ভবতী মহিলাদের প্রতিদিন কমপক্ষে ৮-১০ গ্লাস পানি পান করা উচিত।
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.tipCard} activeOpacity={0.8}>
+              <View style={[styles.tipIconContainer, { backgroundColor: '#FF9500' }]}>
+                <Ionicons name="nutrition" size={28} color="#FFFFFF" />
+              </View>
+              <View style={styles.tipContent}>
+                <Text style={styles.tipTitle}>শিশুর পুষ্টি</Text>
+                <Text style={styles.tipDescription}>
+                  ৬ মাস পর্যন্ত শিশুকে শুধুমাত্র মায়ের দুধ খাওয়ানো উচিত।
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.tipCard} activeOpacity={0.8}>
+              <View style={[styles.tipIconContainer, { backgroundColor: '#34C759' }]}>
+                <Ionicons name="medkit" size={28} color="#FFFFFF" />
+              </View>
+              <View style={styles.tipContent}>
+                <Text style={styles.tipTitle}>টিকাদান সময়সূচি</Text>
+                <Text style={styles.tipDescription}>
+                  শিশুর জন্মের পর থেকে সময়মত সব টিকা দেওয়া নিশ্চিত করুন।
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </ScrollView>
         </View>
 
         {/* Daily Status Card */}
@@ -521,33 +550,110 @@ const styles = StyleSheet.create({
     color: '#888888',
   },
 
-  // Main Menu Styles
-  mainMenuSection: {
-    paddingHorizontal: 20,
-    marginBottom: 30,
+  // Summary Card Styles
+  summaryCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginHorizontal: 20,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  menuGrid: {
+  summaryContent: {
     marginTop: 10,
   },
-  menuRow: {
+  summaryItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
+    alignItems: 'center',
+    marginBottom: 12,
   },
-  menuCard: {
-    width: '48%',
+  summaryText: {
+    fontSize: 16,
+    color: '#333333',
+    marginLeft: 12,
+  },
+
+  // Appointments Styles
+  appointmentsSection: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
+  },
+  appointmentsList: {
+    marginTop: 10,
+  },
+  appointmentCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  appointmentTypeIndicator: {
+    width: 4,
+    height: '100%',
+    borderRadius: 2,
+    marginRight: 12,
+  },
+  appointmentTimeContainer: {
+    alignItems: 'center',
+    width: 60,
+  },
+  appointmentTime: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333333',
+  },
+  appointmentTimeAMPM: {
+    fontSize: 12,
+    color: '#666666',
+  },
+  appointmentDetails: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  appointmentTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333333',
+    marginBottom: 4,
+  },
+  appointmentSubtitle: {
+    fontSize: 14,
+    color: '#666666',
+  },
+
+  // Quick Actions Styles
+  quickActionsSection: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
+  },
+  actionCardsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  actionCard: {
+    width: '48%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    minHeight: 140,
   },
-  menuIconContainer: {
+  actionIconContainer: {
     width: 70,
     height: 70,
     borderRadius: 35,
@@ -560,17 +666,56 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 3,
   },
-  menuCardTitle: {
-    fontSize: 14,
+  actionCardTitle: {
+    fontSize: 16,
     fontWeight: '600',
     color: '#333333',
     textAlign: 'center',
-    marginBottom: 4,
   },
-  menuCardSubtitle: {
-    fontSize: 12,
+
+  // Tips Styles
+  tipsSection: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
+  },
+  tipsScrollContent: {
+    paddingVertical: 10,
+    paddingRight: 20,
+  },
+  tipCard: {
+    width: 280,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    marginRight: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+    flexDirection: 'row',
+  },
+  tipIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  tipContent: {
+    flex: 1,
+  },
+  tipTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333333',
+    marginBottom: 8,
+  },
+  tipDescription: {
+    fontSize: 14,
     color: '#666666',
-    textAlign: 'center',
+    lineHeight: 20,
   },
 
   // Status Section
