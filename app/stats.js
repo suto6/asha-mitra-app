@@ -84,22 +84,7 @@ export default function StatsScreen() {
         },
 
         // Checkup completion stats
-        checkups: [
-          { name: translations.completedCheckups, population: 42, color: '#4BC0C0' },
-          { name: translations.missedCheckups, population: 8, color: '#FF6384' },
-        ],
-
-        pregnantWomen: [
-          { name: translations.firstTrimester, population: 8, color: '#FF9F40' },
-          { name: translations.secondTrimester, population: 12, color: '#4BC0C0' },
-          { name: translations.thirdTrimester, population: 6, color: '#36A2EB' },
-        ],
-
-        riskCases: [
-          { name: translations.highRisk, population: 3, color: '#FF6384' },
-          { name: translations.mediumRisk, population: 7, color: '#FFCD56' },
-          { name: translations.lowRisk, population: 16, color: '#4BC0C0' },
-        ],
+        
 
         vaccinations: [
           { name: translations.fullyVaccinated, population: 22, color: '#4BC0C0' },
@@ -107,25 +92,7 @@ export default function StatsScreen() {
           { name: translations.notVaccinated, population: 4, color: '#FF6384' },
         ],
 
-        // Monthly trends for ANC visits
-        monthlyData: {
-          labels: isEnglish ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'] : ['জানু', 'ফেব্রু', 'মার্চ', 'এপ্রিল', 'মে', 'জুন'],
-          datasets: [
-            {
-              data: [20, 45, 28, 80, 99, 43],
-            }
-          ]
-        },
-
-        // Weekly trends for current month
-        weeklyData: {
-          labels: isEnglish ? ['Week 1', 'Week 2', 'Week 3', 'Week 4'] : ['সপ্তাহ ১', 'সপ্তাহ ২', 'সপ্তাহ ৩', 'সপ্তাহ ৪'],
-          datasets: [
-            {
-              data: [12, 18, 24, 20],
-            }
-          ]
-        }
+        
       }
     };
 
