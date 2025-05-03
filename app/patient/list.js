@@ -1,59 +1,98 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, ScrollView } from 'react-native';
-import { router } from 'expo-router';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import BengaliText from '@/constants/BengaliText';
 import BengaliButton from '@/components/BengaliButton';
 import BengaliTextInput from '@/components/BengaliTextInput';
 import PatientCard from '@/components/PatientCard';
+import { searchPatientsByName } from '@/services/patientService';
 
 export default function PatientListScreen() {
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('all');
 
-  useEffect(() => {
-    // In a real implementation, we would fetch patients from a database
-    // For demo purposes, we're using placeholder data
-    const mockPatients = [
-      {
-        id: '1',
-        name: 'পিঙ্কি বিশ্বাস',
-        age: '25',
-        type: 'pregnant',
-        lastVisit: '২০২৩-০৫-১০',
-        lmpDate: '২০২৩-০৪-০১',
-      },
-      {
-        id: '2',
-        name: 'সুমিতা রায়',
-        age: '22',
-        type: 'pregnant',
-        lastVisit: '২০২৩-০৫-০৮',
-        lmpDate: '২০২৩-০৩-১৫',
-      },
-      {
-        id: '3',
-        name: 'অনিতা দাস',
-        age: '0',
-        type: 'newborn',
-        lastVisit: '২০২৩-০৫-১২',
-        birthDate: '২০২৩-০৫-০১',
-      },
-      {
-        id: '4',
-        name: 'রাজু সিং',
-        age: '3',
-        type: 'child',
-        lastVisit: '২০২৩-০৫-০৫',
-        birthDate: '২০২০-০২-১০',
-      },
-    ];
-    
-    setPatients(mockPatients);
-    setLoading(false);
-  }, []);
+  // Function to fetch all patients
+  const fetchPatients = async () => {
+    setLoading(true);
+    try {
+      // Fetch all patients from local storage
+      const result = await searchPatientsByName();
+
+      if (result.success && result.patients.length > 0) {
+        // Map the data to match our expected format
+        const mappedPatients = result.patients.map(patient => ({
+          id: patient.id,
+          name: patient.name,
+          age: patient.age,
+          type: patient.type || 'pregnant',
+          lastVisit: patient.created_at ? new Date(patient.created_at).toISOString().split('T')[0] : '',
+          lmpDate: patient.lmpDate || '',
+          birthDate: patient.dateOfBirth || '',
+          phone: patient.phone || '',
+        }));
+
+        setPatients(mappedPatients);
+      } else {
+        console.log('No patients found or error fetching patients:', result.error);
+        // Set fallback data if fetch fails or no patients found
+        setPatients([
+          {
+            id: '1',
+            name: 'পিঙ্কি বিশ্বাস',
+            age: '25',
+            type: 'pregnant',
+            lastVisit: '২০২৩-০৫-১০',
+            lmpDate: '২০২৩-০৪-০১',
+          },
+          {
+            id: '2',
+            name: 'সুমিতা রায়',
+            age: '22',
+            type: 'pregnant',
+            lastVisit: '২০২৩-০৫-০৮',
+            lmpDate: '২০২৩-০৩-১৫',
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error('Error fetching patients:', error);
+      // Set fallback data if fetch fails
+      setPatients([
+        {
+          id: '1',
+          name: 'পিঙ্কি বিশ্বাস',
+          age: '25',
+          type: 'pregnant',
+          lastVisit: '২০২৩-০৫-১০',
+          lmpDate: '২০২৩-০৪-০১',
+        },
+        {
+          id: '2',
+          name: 'সুমিতা রায়',
+          age: '22',
+          type: 'pregnant',
+          lastVisit: '২০২৩-০৫-০৮',
+          lmpDate: '২০২৩-০৩-১৫',
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Use useFocusEffect to refresh data when the screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('Patient list screen focused, refreshing data...');
+      fetchPatients();
+
+      // No cleanup needed for this effect
+      return () => {};
+    }, [])
+  );
 
   const handleSelectPatient = (patientId) => {
     router.push({
@@ -73,7 +112,7 @@ export default function PatientListScreen() {
         {/* Header with Back Button */}
         <View style={styles.headerContainer}>
           <View style={styles.header}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.backButton}
               onPress={() => router.back()}
             >
@@ -87,7 +126,7 @@ export default function PatientListScreen() {
         {/* Filter Tabs */}
         <View style={styles.filterContainer}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.filterTab, activeFilter === 'all' && styles.activeFilterTab]}
               onPress={() => setActiveFilter('all')}
             >
@@ -95,8 +134,8 @@ export default function PatientListScreen() {
                 সব
               </Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={[styles.filterTab, activeFilter === 'pregnant' && styles.activeFilterTab]}
               onPress={() => setActiveFilter('pregnant')}
             >
@@ -104,8 +143,8 @@ export default function PatientListScreen() {
                 {BengaliText.PREGNANT}
               </Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={[styles.filterTab, activeFilter === 'newborn' && styles.activeFilterTab]}
               onPress={() => setActiveFilter('newborn')}
             >
@@ -113,8 +152,8 @@ export default function PatientListScreen() {
                 {BengaliText.NEWBORN}
               </Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={[styles.filterTab, activeFilter === 'child' && styles.activeFilterTab]}
               onPress={() => setActiveFilter('child')}
             >
@@ -130,9 +169,10 @@ export default function PatientListScreen() {
           <Text style={styles.listTitle}>
             {filteredPatients.length} জন রোগী পাওয়া গেছে
           </Text>
-          
+
           {loading ? (
             <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#4A90E2" />
               <Text style={styles.loadingText}>লোড হচ্ছে...</Text>
             </View>
           ) : filteredPatients.length > 0 ? (
@@ -157,9 +197,9 @@ export default function PatientListScreen() {
             </View>
           )}
         </View>
-        
+
         {/* Add Patient Button */}
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.addButton}
           onPress={() => router.push('/(tabs)/add-patient')}
         >
@@ -214,7 +254,7 @@ const styles = StyleSheet.create({
   placeholderView: {
     width: 40,
   },
-  
+
   // Filter Styles
   filterContainer: {
     paddingHorizontal: 20,
@@ -246,7 +286,7 @@ const styles = StyleSheet.create({
   activeFilterText: {
     color: '#FFFFFF',
   },
-  
+
   // List Styles
   listContainer: {
     flex: 1,
@@ -282,7 +322,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     textAlign: 'center',
   },
-  
+
   // Add Button
   addButton: {
     position: 'absolute',

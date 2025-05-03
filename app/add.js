@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 
 import BengaliText from '@/constants/BengaliText';
 import BottomNavBar from '@/components/BottomNavBar';
@@ -9,6 +10,7 @@ import BengaliButton from '@/components/BengaliButton';
 import VoiceInputButton from '@/components/VoiceInputButton';
 import LanguageToggle from '@/components/LanguageToggle';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { addPatient } from '@/services/patientService';
 
 export default function AddScreen() {
   const [activeTab, setActiveTab] = useState('pregnant');
@@ -943,54 +945,135 @@ export default function AddScreen() {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setSaving(true);
 
-    // Simulate saving
-    setTimeout(() => {
-      setSaving(false);
+    try {
+      let patientData = {};
+      let patientType = '';
 
-      // Reset form based on active tab
+      // Prepare data based on active tab
       if (activeTab === 'pregnant') {
-        setPregnantData({
-          name: '',
-          age: '',
-          phone: '',
-          lmpDate: '',
-          weight: '',
-          height: '',
-          bloodPressure: '',
-          isHighRisk: false,
-          notes: '',
-        });
+        patientData = {
+          name: pregnantData.name || 'Unknown',
+          age: pregnantData.age || '0',
+          phone: pregnantData.phone || '',
+          lmpDate: pregnantData.lmpDate || '',
+          weight: pregnantData.weight || '',
+          height: pregnantData.height || '',
+          bloodPressure: pregnantData.bloodPressure || '',
+          isHighRisk: pregnantData.isHighRisk || false,
+          notes: pregnantData.notes || '',
+          type: 'pregnant'
+        };
+        patientType = 'pregnant';
       } else if (activeTab === 'postnatal') {
-        setPostnatalData({
-          motherName: '',
-          age: '',
-          phone: '',
-          deliveryDate: '',
-          deliveryType: 'normal',
-          babyWeight: '',
-          motherWeight: '',
-          bloodPressure: '',
-          notes: '',
-        });
+        patientData = {
+          name: postnatalData.motherName || 'Unknown', // Use motherName as the main name
+          age: postnatalData.age || '0',
+          phone: postnatalData.phone || '',
+          deliveryDate: postnatalData.deliveryDate || '',
+          deliveryType: postnatalData.deliveryType || 'normal',
+          babyWeight: postnatalData.babyWeight || '',
+          motherWeight: postnatalData.motherWeight || '',
+          bloodPressure: postnatalData.bloodPressure || '',
+          notes: postnatalData.notes || '',
+          type: 'postnatal'
+        };
+        patientType = 'postnatal';
       } else if (activeTab === 'child') {
-        setChildData({
-          name: '',
-          motherName: '',
-          dateOfBirth: '',
-          gender: '',
-          weight: '',
-          height: '',
-          immunizationStatus: '',
-          notes: '',
-        });
+        patientData = {
+          name: childData.name || 'Unknown',
+          motherName: childData.motherName || '',
+          dateOfBirth: childData.dateOfBirth || '',
+          gender: childData.gender || '',
+          weight: childData.weight || '',
+          height: childData.height || '',
+          immunizationStatus: childData.immunizationStatus || '',
+          notes: childData.notes || '',
+          type: 'child'
+        };
+        patientType = 'child';
       }
 
-      // Log success message (in a real app)
-      console.log('Data saved successfully!');
-    }, 1500);
+      console.log('Saving patient data:', patientData);
+
+      // Save data using patientService
+      const result = await addPatient(patientData);
+
+      console.log('Save result:', result);
+
+      if (result.success) {
+        // Show success message
+        Alert.alert(
+          isEnglish ? 'Success' : 'সফল',
+          isEnglish ? 'Data saved successfully!' : 'তথ্য সফলভাবে সংরক্ষণ করা হয়েছে!',
+          [
+            {
+              text: isEnglish ? 'OK' : 'ঠিক আছে',
+              onPress: () => {
+                // Reset form based on active tab
+                if (activeTab === 'pregnant') {
+                  setPregnantData({
+                    name: '',
+                    age: '',
+                    phone: '',
+                    lmpDate: '',
+                    weight: '',
+                    height: '',
+                    bloodPressure: '',
+                    isHighRisk: false,
+                    notes: '',
+                  });
+                } else if (activeTab === 'postnatal') {
+                  setPostnatalData({
+                    motherName: '',
+                    age: '',
+                    phone: '',
+                    deliveryDate: '',
+                    deliveryType: 'normal',
+                    babyWeight: '',
+                    motherWeight: '',
+                    bloodPressure: '',
+                    notes: '',
+                  });
+                } else if (activeTab === 'child') {
+                  setChildData({
+                    name: '',
+                    motherName: '',
+                    dateOfBirth: '',
+                    gender: '',
+                    weight: '',
+                    height: '',
+                    immunizationStatus: '',
+                    notes: '',
+                  });
+                }
+
+                // Navigate to dashboard
+                router.replace('/(tabs)/dashboard');
+              }
+            }
+          ]
+        );
+      } else {
+        // Show error message
+        Alert.alert(
+          isEnglish ? 'Error' : 'ত্রুটি',
+          isEnglish ? `Failed to save data: ${result.error}` : `তথ্য সংরক্ষণ করতে ব্যর্থ: ${result.error}`,
+          [{ text: isEnglish ? 'OK' : 'ঠিক আছে' }]
+        );
+      }
+    } catch (error) {
+      console.error('Save error:', error);
+      Alert.alert(
+        isEnglish ? 'Error' : 'ত্রুটি',
+        isEnglish ? 'An unexpected error occurred' : 'একটি অপ্রত্যাশিত ত্রুটি ঘটেছে',
+        [{ text: isEnglish ? 'OK' : 'ঠিক আছে' }]
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Helper function to convert Bengali numerals to English numerals

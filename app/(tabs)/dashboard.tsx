@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, ImageBackground } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, ImageBackground, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -10,6 +10,7 @@ import MeetingItem from '@/components/MeetingItem';
 import BottomNavBar from '@/components/BottomNavBar';
 import LanguageToggle from '@/components/LanguageToggle';
 import BengaliText from '@/constants/BengaliText';
+import { searchPatientsByName } from '@/services/patientService';
 
 export default function DashboardScreen() {
   const { userProfile, logout } = useAuth();
@@ -83,24 +84,78 @@ export default function DashboardScreen() {
     },
   ];
 
-  useEffect(() => {
-    setRecentPatients([
-      {
-        id: '1',
-        name: 'পিঙ্কি বিশ্বাস',
-        age: '25',
-        lastVisit: '২০২৩-০৫-১০',
-        lmpDate: '২০২৩-০৪-০১',
-      },
-      {
-        id: '2',
-        name: 'সুমিতা রায়',
-        age: '22',
-        lastVisit: '২০২৩-০৫-০৮',
-        lmpDate: '২০২৩-০৩-১৫',
-      },
-    ]);
-  }, []);
+  // Function to fetch recent patients
+  const fetchRecentPatients = async () => {
+    setLoading(true);
+    try {
+      // Fetch recent patients from local storage
+      const result = await searchPatientsByName();
+
+      if (result.success && result.patients.length > 0) {
+        // Map the data to match our Patient interface
+        const patients = result.patients.map(patient => ({
+          id: patient.id,
+          name: patient.name,
+          age: patient.age,
+          lastVisit: patient.created_at ? new Date(patient.created_at).toISOString().split('T')[0] : '',
+          lmpDate: patient.lmpDate || '',
+        }));
+
+        setRecentPatients(patients);
+      } else {
+        console.error('Failed to fetch recent patients or no patients found:', result.error);
+        // Set fallback data if fetch fails or no patients found
+        setRecentPatients([
+          {
+            id: '1',
+            name: 'পিঙ্কি বিশ্বাস',
+            age: '25',
+            lastVisit: '২০২৩-০৫-১০',
+            lmpDate: '২০২৩-০৪-০১',
+          },
+          {
+            id: '2',
+            name: 'সুমিতা রায়',
+            age: '22',
+            lastVisit: '২০২৩-০৫-০৮',
+            lmpDate: '২০২৩-০৩-১৫',
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error('Error fetching recent patients:', error);
+      // Set fallback data if fetch fails
+      setRecentPatients([
+        {
+          id: '1',
+          name: 'পিঙ্কি বিশ্বাস',
+          age: '25',
+          lastVisit: '২০২৩-০৫-১০',
+          lmpDate: '২০২৩-০৪-০১',
+        },
+        {
+          id: '2',
+          name: 'সুমিতা রায়',
+          age: '22',
+          lastVisit: '২০২৩-০৫-০৮',
+          lmpDate: '২০২৩-০৩-১৫',
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Use useFocusEffect to refresh data when the screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('Dashboard focused, refreshing data...');
+      fetchRecentPatients();
+
+      // No cleanup needed for this effect
+      return () => {};
+    }, [])
+  );
 
   const handleLogout = async () => {
     setLoading(true);
@@ -112,9 +167,7 @@ export default function DashboardScreen() {
     }
   };
 
-  const navigateToSearchPatient = () => {
-    router.push('/(tabs)/search-patient');
-  };
+
 
   const navigateToPatientDetails = (patientId: string) => {
     router.push({
@@ -125,7 +178,7 @@ export default function DashboardScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ImageBackground 
+      <ImageBackground
         source={require('@/assets/images/health-bg.jpg')}
         style={styles.backgroundImage}
         blurRadius={2}
@@ -316,35 +369,80 @@ export default function DashboardScreen() {
                 </TouchableOpacity>
               </View>
 
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.recentPatientsScroll}
-              >
-                <TouchableOpacity style={[styles.recentPatientCard, styles.recentPatientCard1]} activeOpacity={0.7}>
-                  <View style={[styles.patientTypeTag, { backgroundColor: '#4A90E2' }]}>
-                    <Text style={styles.patientTypeText}>{translations.pregnant}</Text>
-                  </View>
-                  <Text style={styles.recentPatientName}>পিঙ্কি বিশ্বাস</Text>
-                  <Text style={styles.recentPatientDate}>{translations.today}</Text>
-                </TouchableOpacity>
+              {loading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color="#4A90E2" />
+                </View>
+              ) : (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.recentPatientsScroll}
+                >
+                  {recentPatients.length > 0 ? (
+                    recentPatients.map((patient, index) => {
+                      // Determine card style and tag color based on index or patient type
+                      const cardStyle = index % 3 === 0 ? styles.recentPatientCard1 :
+                                        index % 3 === 1 ? styles.recentPatientCard2 :
+                                        styles.recentPatientCard3;
 
-                <TouchableOpacity style={[styles.recentPatientCard, styles.recentPatientCard2]} activeOpacity={0.7}>
-                  <View style={[styles.patientTypeTag, { backgroundColor: '#FF9500' }]}>
-                    <Text style={styles.patientTypeText}>{translations.newborn}</Text>
-                  </View>
-                  <Text style={styles.recentPatientName}>অনিতা দাস</Text>
-                  <Text style={styles.recentPatientDate}>{translations.today}</Text>
-                </TouchableOpacity>
+                      const tagColor = index % 3 === 0 ? '#4A90E2' :
+                                      index % 3 === 1 ? '#FF9500' :
+                                      '#34C759';
 
-                <TouchableOpacity style={[styles.recentPatientCard, styles.recentPatientCard3]} activeOpacity={0.7}>
-                  <View style={[styles.patientTypeTag, { backgroundColor: '#34C759' }]}>
-                    <Text style={styles.patientTypeText}>{translations.child}</Text>
-                  </View>
-                  <Text style={styles.recentPatientName}>রাজু সিং</Text>
-                  <Text style={styles.recentPatientDate}>{translations.yesterday}</Text>
-                </TouchableOpacity>
-              </ScrollView>
+                      // Determine patient type text
+                      const patientType = index % 3 === 0 ? translations.pregnant :
+                                         index % 3 === 1 ? translations.newborn :
+                                         translations.child;
+
+                      // Format date for display
+                      const today = new Date().toISOString().split('T')[0];
+                      const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+
+                      let dateText = patient.lastVisit;
+                      if (patient.lastVisit === today) {
+                        dateText = translations.today;
+                      } else if (patient.lastVisit === yesterday) {
+                        dateText = translations.yesterday;
+                      }
+
+                      return (
+                        <TouchableOpacity
+                          key={patient.id}
+                          style={[styles.recentPatientCard, cardStyle]}
+                          activeOpacity={0.7}
+                          onPress={() => navigateToPatientDetails(patient.id)}
+                        >
+                          <View style={[styles.patientTypeTag, { backgroundColor: tagColor }]}>
+                            <Text style={styles.patientTypeText}>{patientType}</Text>
+                          </View>
+                          <Text style={styles.recentPatientName}>{patient.name}</Text>
+                          <Text style={styles.recentPatientDate}>{dateText}</Text>
+                        </TouchableOpacity>
+                      );
+                    })
+                  ) : (
+                    // Fallback if no patients are found
+                    <>
+                      <TouchableOpacity style={[styles.recentPatientCard, styles.recentPatientCard1]} activeOpacity={0.7}>
+                        <View style={[styles.patientTypeTag, { backgroundColor: '#4A90E2' }]}>
+                          <Text style={styles.patientTypeText}>{translations.pregnant}</Text>
+                        </View>
+                        <Text style={styles.recentPatientName}>পিঙ্কি বিশ্বাস</Text>
+                        <Text style={styles.recentPatientDate}>{translations.today}</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity style={[styles.recentPatientCard, styles.recentPatientCard2]} activeOpacity={0.7}>
+                        <View style={[styles.patientTypeTag, { backgroundColor: '#FF9500' }]}>
+                          <Text style={styles.patientTypeText}>{translations.newborn}</Text>
+                        </View>
+                        <Text style={styles.recentPatientName}>অনিতা দাস</Text>
+                        <Text style={styles.recentPatientDate}>{translations.today}</Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+                </ScrollView>
+              )}
             </View>
 
             {/* Daily Status Card */}
@@ -754,5 +852,11 @@ const styles = StyleSheet.create({
   },
   bottomNavSpace: {
     height: 90,
+  },
+  loadingContainer: {
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 150,
   },
 });

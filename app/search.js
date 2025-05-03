@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, ScrollView } from 'react-native';
-import { router } from 'expo-router';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import BengaliText from '@/constants/BengaliText';
@@ -11,6 +11,8 @@ import BottomNavBar from '@/components/BottomNavBar';
 import VoiceInputButton from '@/components/VoiceInputButton';
 import LanguageToggle from '@/components/LanguageToggle';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { searchPatientsByName } from '@/services/patientService';
+import { startVoiceRecognition, parseVoiceInput } from '@/utils/voiceRecognition';
 
 export default function SearchScreen() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -21,6 +23,7 @@ export default function SearchScreen() {
   const [searching, setSearching] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const recognitionRef = useRef(null);
   const { isEnglish } = useLanguage();
 
   // Text translations
@@ -45,69 +48,151 @@ export default function SearchScreen() {
     noRecentPatients: isEnglish ? 'No recent patients' : BengaliText.NO_RECENT_PATIENTS,
   };
 
-  useEffect(() => {
-    // In a real implementation, we would fetch recent patients from a database
-    // For demo purposes, we're using placeholder data
-    const mockRecentPatients = [
-      {
-        id: '1',
-        name: 'পিঙ্কি বিশ্বাস',
-        age: '25',
-        type: 'pregnant',
-        lastVisit: '২০২৩-০৫-১০',
-        lmpDate: '২০২৩-০৪-০১',
-      },
-      {
-        id: '2',
-        name: 'সুমিতা রায়',
-        age: '22',
-        type: 'pregnant',
-        lastVisit: '২০২৩-০৫-০৮',
-        lmpDate: '২০২৩-০৩-১৫',
-      },
-      {
-        id: '3',
-        name: 'অনিতা দাস',
-        age: '0',
-        type: 'newborn',
-        lastVisit: '২০২৩-০৫-১২',
-        birthDate: '২০২৩-০৫-০১',
-      },
-      {
-        id: '4',
-        name: 'রাজু সিং',
-        age: '3',
-        type: 'child',
-        lastVisit: '২০২৩-০৫-০৫',
-        birthDate: '২০২০-০২-১০',
-      },
-    ];
+  // Function to fetch recent patients
+  const fetchRecentPatients = async () => {
+    setSearching(true);
+    try {
+      // Fetch recent patients from local storage
+      const result = await searchPatientsByName();
 
-    setRecentPatients(mockRecentPatients);
+      if (result.success && result.patients.length > 0) {
+        // Map the data to match our expected format
+        const patients = result.patients.map(patient => ({
+          id: patient.id,
+          name: patient.name,
+          age: patient.age,
+          type: patient.type || 'pregnant',
+          lastVisit: patient.created_at ? new Date(patient.created_at).toISOString().split('T')[0] : '',
+          lmpDate: patient.lmpDate || '',
+          birthDate: patient.dateOfBirth || '',
+          phone: patient.phone || '',
+        }));
+
+        setRecentPatients(patients);
+      } else {
+        console.log('No patients found or error fetching patients:', result.error);
+        // Set fallback data if fetch fails or no patients found
+        setRecentPatients([
+          {
+            id: '1',
+            name: 'পিঙ্কি বিশ্বাস',
+            age: '25',
+            type: 'pregnant',
+            lastVisit: '২০২৩-০৫-১০',
+            lmpDate: '২০২৩-০৪-০১',
+          },
+          {
+            id: '2',
+            name: 'সুমিতা রায়',
+            age: '22',
+            type: 'pregnant',
+            lastVisit: '২০২৩-০৫-০৮',
+            lmpDate: '২০২৩-০৩-১৫',
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error('Error fetching recent patients:', error);
+      // Set fallback data if fetch fails
+      setRecentPatients([
+        {
+          id: '1',
+          name: 'পিঙ্কি বিশ্বাস',
+          age: '25',
+          type: 'pregnant',
+          lastVisit: '২০২৩-০৫-১০',
+          lmpDate: '২০২৩-০৪-০১',
+        },
+        {
+          id: '2',
+          name: 'সুমিতা রায়',
+          age: '22',
+          type: 'pregnant',
+          lastVisit: '২০২৩-০৫-০৮',
+          lmpDate: '২০২৩-০৩-১৫',
+        },
+      ]);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  // Use useFocusEffect to refresh data when the screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('Search screen focused, refreshing data...');
+      fetchRecentPatients();
+
+      // No cleanup needed for this effect
+      return () => {};
+    }, [])
+  );
+
+  // Cleanup effect for voice recognition
+  useEffect(() => {
+    return () => {
+      // Clean up voice recognition when component unmounts
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+      }
+    };
   }, []);
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (!searchQuery) return;
 
     setSearching(true);
 
-    // Simulate search delay
-    setTimeout(() => {
-      // In a real app, this would search a database
-      const results = recentPatients.filter(patient => {
-        if (searchType === 'name') {
-          return patient.name.toLowerCase().includes(searchQuery.toLowerCase());
-        } else if (searchType === 'phone') {
-          return patient.phone && patient.phone.includes(searchQuery);
-        } else if (searchType === 'id') {
-          return patient.id.includes(searchQuery);
-        }
-        return false;
-      });
+    try {
+      // Use patientService to search patients
+      let result;
 
-      setSearchResults(results);
+      if (searchType === 'name') {
+        result = await searchPatientsByName(searchQuery);
+      } else {
+        // For other search types, we'll fetch all and filter locally
+        result = await searchPatientsByName();
+      }
+
+      if (result.success) {
+        let filteredResults = result.patients;
+
+        // If not searching by name, filter locally
+        if (searchType !== 'name') {
+          filteredResults = result.patients.filter(patient => {
+            if (searchType === 'phone') {
+              return patient.phone && patient.phone.includes(searchQuery);
+            } else if (searchType === 'id') {
+              return patient.id && patient.id.includes(searchQuery);
+            }
+            return false;
+          });
+        }
+
+        // Map the data to match our expected format
+        const mappedResults = filteredResults.map(patient => ({
+          id: patient.id,
+          name: patient.name,
+          age: patient.age,
+          type: patient.type || 'pregnant',
+          lastVisit: patient.created_at ? new Date(patient.created_at).toISOString().split('T')[0] : '',
+          lmpDate: patient.lmpDate || '',
+          birthDate: patient.dateOfBirth || '',
+          phone: patient.phone || '',
+        }));
+
+        setSearchResults(mappedResults);
+      } else {
+        console.error('Search failed:', result.error);
+        setSearchResults([]);
+      }
+    } catch (error) {
+      console.error('Error during search:', error);
+      setSearchResults([]);
+    } finally {
       setSearching(false);
-    }, 1000);
+    }
   };
 
   const handleClearSearch = () => {
@@ -115,24 +200,64 @@ export default function SearchScreen() {
     setSearchResults([]);
   };
 
-  const handleStartRecording = () => {
-    setIsRecording(true);
+  const handleStartRecording = async () => {
+    try {
+      setIsRecording(true);
 
-    // Simulate voice recognition
-    setTimeout(() => {
+      // Start voice recognition using our updated utility
+      const recognition = await startVoiceRecognition(
+        (result) => {
+          // Handle successful voice recognition
+          console.log('Voice recognition result:', result);
+          setIsRecording(false);
+          setIsProcessing(true);
+
+          // Parse the voice input
+          const parsedInput = parseVoiceInput(result);
+          console.log('Parsed voice input:', parsedInput);
+
+          // Set the search type and query based on the parsed input
+          if (parsedInput.type) {
+            setSearchType(parsedInput.type);
+          }
+
+          setSearchQuery(parsedInput.value);
+
+          // Process the result
+          setTimeout(() => {
+            setIsProcessing(false);
+            handleSearch();
+          }, 500);
+        },
+        (error) => {
+          // Handle error
+          console.error('Voice recognition error:', error);
+          setIsRecording(false);
+          setIsProcessing(false);
+
+          // Show error message
+          Alert.alert(
+            isEnglish ? 'Error' : 'ত্রুটি',
+            isEnglish ? 'Failed to recognize speech. Please try again.' : 'কথা চিনতে ব্যর্থ হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।',
+            [{ text: isEnglish ? 'OK' : 'ঠিক আছে' }]
+          );
+        }
+      );
+
+      // Store the recognition object for cleanup
+      recognitionRef.current = recognition;
+    } catch (error) {
+      console.error('Failed to start voice recognition:', error);
       setIsRecording(false);
-      setIsProcessing(true);
-
-      // Simulate processing
-      setTimeout(() => {
-        setIsProcessing(false);
-        setSearchQuery('পিঙ্কি');
-        handleSearch();
-      }, 1500);
-    }, 2000);
+      setIsProcessing(false);
+    }
   };
 
   const handleStopRecording = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+    }
     setIsRecording(false);
   };
 

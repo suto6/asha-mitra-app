@@ -1,56 +1,19 @@
-import { supabase } from '../lib/supabase';
+import * as localStorageService from './localStorageService';
 
 // Function to add a new patient
 export const addPatient = async (patientData, userId) => {
   try {
-    // Get the current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError) throw userError;
-    if (!user) return { success: false, error: 'No user logged in' };
-    
-    // Create patient record
-    const { data, error } = await supabase
-      .from('patients')
-      .insert([
-        {
-          name: patientData.name,
-          age: patientData.age,
-          type: patientData.type || 'general',
-          phone: patientData.phone || null,
-          recorded_by_asha_id: user.id
-        }
-      ])
-      .select()
-      .single();
-    
-    if (error) throw error;
-    
-    // If health record data is provided, create a health record
-    if (patientData.lmpDate || patientData.weight || patientData.height || 
-        patientData.bloodPressure || patientData.notes) {
-      
-      const healthRecord = {
-        patient_id: data.id,
-        lmp_date: patientData.lmpDate,
-        weight_kg: patientData.weight,
-        height_cm: patientData.height,
-        blood_pressure: patientData.bloodPressure,
-        notes: patientData.notes,
-        recorded_by_asha_id: user.id
-      };
-      
-      const { error: healthError } = await supabase
-        .from('health_records')
-        .insert([healthRecord]);
-      
-      if (healthError) throw healthError;
+    // Use local storage service to add patient
+    const result = await localStorageService.addPatient(patientData);
+
+    if (!result.success) {
+      throw new Error(result.error);
     }
-    
-    return { 
-      success: true, 
-      patientId: data.id,
-      patient: data
+
+    return {
+      success: true,
+      patientId: result.patient.id,
+      patient: result.patient
     };
   } catch (error) {
     console.error('Add patient error:', error);
@@ -61,52 +24,29 @@ export const addPatient = async (patientData, userId) => {
 // Function to search patients by name
 export const searchPatientsByName = async (name = '') => {
   try {
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError) throw userError;
-    if (!user) return { success: false, error: 'No user logged in' };
-    
-    let query = supabase
-      .from('patients')
-      .select('*, health_records(*)')
-      .eq('recorded_by_asha_id', user.id)
-      .order('created_at', { ascending: false });
-    
-    // Add name filter if provided
-    if (name) {
-      query = query.ilike('name', `%${name}%`);
+    // Use local storage service to search patients
+    const result = await localStorageService.searchPatientsByName(name);
+
+    if (!result.success) {
+      throw new Error(result.error);
     }
-    
-    // Limit to 10 results if no name is provided (recent patients)
-    if (!name) {
-      query = query.limit(10);
-    }
-    
-    const { data, error } = await query;
-    
-    if (error) throw error;
-    
+
     // Process the data to match the expected format
-    const patients = data.map(patient => {
-      const lastRecord = patient.health_records && patient.health_records.length > 0
-        ? patient.health_records.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0]
-        : null;
-      
+    const patients = result.patients.map(patient => {
       return {
         id: patient.id,
         name: patient.name,
         age: patient.age,
         phone: patient.phone,
         type: patient.type,
-        recorded_by_asha_id: patient.recorded_by_asha_id,
+        lmpDate: patient.lmpDate,
         created_at: patient.created_at,
-        updated_at: patient.updated_at,
-        last_record: lastRecord
+        updated_at: patient.updated_at
       };
     });
-    
-    return { 
-      success: true, 
+
+    return {
+      success: true,
       patients
     };
   } catch (error) {
@@ -118,24 +58,16 @@ export const searchPatientsByName = async (name = '') => {
 // Function to get patient details
 export const getPatientDetails = async (patientId) => {
   try {
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError) throw userError;
-    if (!user) return { success: false, error: 'No user logged in' };
-    
-    // Get patient record
-    const { data, error } = await supabase
-      .from('patients')
-      .select('*')
-      .eq('id', patientId)
-      .eq('recorded_by_asha_id', user.id)
-      .single();
-    
-    if (error) throw error;
-    
-    return { 
-      success: true, 
-      patient: data
+    // Use local storage service to get patient details
+    const result = await localStorageService.getPatientById(patientId);
+
+    if (!result.success) {
+      throw new Error(result.error);
+    }
+
+    return {
+      success: true,
+      patient: result.patient
     };
   } catch (error) {
     console.error('Get patient details error:', error);
@@ -146,23 +78,30 @@ export const getPatientDetails = async (patientId) => {
 // Function to get patient health records
 export const getPatientHealthRecords = async (patientId) => {
   try {
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError) throw userError;
-    if (!user) return { success: false, error: 'No user logged in' };
-    
-    // Get health records
-    const { data, error } = await supabase
-      .from('health_records')
-      .select('*')
-      .eq('patient_id', patientId)
-      .order('timestamp', { ascending: false });
-    
-    if (error) throw error;
-    
-    return { 
-      success: true, 
-      records: data
+    // Use local storage service to get patient details (which includes health records)
+    const result = await localStorageService.getPatientById(patientId);
+
+    if (!result.success) {
+      throw new Error(result.error);
+    }
+
+    // Extract health-related fields as records
+    const records = [
+      {
+        id: '1',
+        patient_id: patientId,
+        lmp_date: result.patient.lmpDate,
+        weight_kg: result.patient.weight,
+        height_cm: result.patient.height,
+        blood_pressure: result.patient.bloodPressure,
+        notes: result.patient.notes,
+        timestamp: result.patient.created_at
+      }
+    ];
+
+    return {
+      success: true,
+      records
     };
   } catch (error) {
     console.error('Get health records error:', error);
@@ -173,34 +112,45 @@ export const getPatientHealthRecords = async (patientId) => {
 // Function to add a health record
 export const addHealthRecord = async (patientId, recordData) => {
   try {
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError) throw userError;
-    if (!user) return { success: false, error: 'No user logged in' };
-    
-    // Create health record
-    const healthRecord = {
+    // Get the patient first
+    const patientResult = await localStorageService.getPatientById(patientId);
+
+    if (!patientResult.success) {
+      throw new Error(patientResult.error);
+    }
+
+    // Update the patient with new health record data
+    const updateData = {
+      lmpDate: recordData.lmpDate,
+      weight: recordData.weight,
+      height: recordData.height,
+      bloodPressure: recordData.bloodPressure,
+      notes: recordData.notes,
+      updated_at: new Date().toISOString()
+    };
+
+    const updateResult = await localStorageService.updatePatient(patientId, updateData);
+
+    if (!updateResult.success) {
+      throw new Error(updateResult.error);
+    }
+
+    // Create a record object to return
+    const record = {
+      id: Date.now().toString(),
       patient_id: patientId,
       lmp_date: recordData.lmpDate,
       weight_kg: recordData.weight,
       height_cm: recordData.height,
       blood_pressure: recordData.bloodPressure,
       notes: recordData.notes,
-      recorded_by_asha_id: user.id
+      timestamp: new Date().toISOString()
     };
-    
-    const { data, error } = await supabase
-      .from('health_records')
-      .insert([healthRecord])
-      .select()
-      .single();
-    
-    if (error) throw error;
-    
-    return { 
-      success: true, 
-      recordId: data.id,
-      record: data
+
+    return {
+      success: true,
+      recordId: record.id,
+      record
     };
   } catch (error) {
     console.error('Add health record error:', error);
