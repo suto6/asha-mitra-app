@@ -67,7 +67,6 @@ export default function AddScreen() {
     age: '',
     phone: '',
     lmpDate: '',
-    eddDate: '',
     weight: '',
     height: '',
     bloodPressure: '',
@@ -213,8 +212,7 @@ export default function AddScreen() {
           notes: 'ফলব্যাক ডাটা - ভয়েস ইনপুট কাজ করছে না',
         };
 
-        // Calculate EDD based on LMP
-        fallbackData.eddDate = calculateEDD(fallbackData.lmpDate);
+
 
         // Update state with fallback data
         setPregnantData(fallbackData);
@@ -279,12 +277,15 @@ export default function AddScreen() {
       // Define regex patterns for both Bengali and English
       const patterns = {
         name: isEnglish ? /name\s+([^\s,\.]+(?:\s+[^\s,\.]+)*)/i : /নাম\s+([^\s,।]+(?:\s+[^\s,।]+)*)/i,
-        age: isEnglish ? /age\s+(\d+)/i : /বয়স\s+(\d+)/i,
-        phone: isEnglish ? /phone\s+(\d+)/i : /ফোন\s+(\d+)/i,
-        lmp: isEnglish ? /lmp\s+([^\s,\.]+(?:\s+[^\s,\.]+)*)/i : /শেষ\s+মাসিক\s+([^\s,।]+(?:\s+[^\s,।]+)*)/i,
-        weight: isEnglish ? /weight\s+(\d+)/i : /ওজন\s+(\d+)/i,
-        height: isEnglish ? /height\s+(\d+)/i : /উচ্চতা\s+(\d+)/i,
-        bp: isEnglish ? /blood\s+pressure\s+([^\s,\.]+)/i : /রক্তচাপ\s+([^\s,।]+)/i,
+        age: isEnglish ? /age\s+([0-9০-৯]+)/i : /বয়স\s+([0-9০-৯]+)/i,
+        phone: isEnglish ? /phone(?:\s+number)?\s+([0-9০-৯\s\-]+)/i : /ফোন(?:\s+নম্বর)?\s+([0-9০-৯\s\-]+)/i,
+        lmp: isEnglish ?
+          /(?:lmp|last\s+menstrual\s+period)\s+([0-9০-৯\/\-\.]+(?:\s+[0-9০-৯\/\-\.]+)*)/i :
+          /(?:শেষ\s+মাসিক(?:ের)?\s+তারিখ)\s+([0-9০-৯\/\-\.]+(?:\s+[0-9০-৯\/\-\.]+)*)/i,
+        weight: isEnglish ? /weight\s+([0-9০-৯\.]+)/i : /ওজন\s+([0-9০-৯\.]+)/i,
+        height: isEnglish ? /height\s+([0-9০-৯\.]+)/i : /উচ্চতা\s+([0-9০-৯\.]+)/i,
+        bp: isEnglish ? /(?:blood\s+pressure|bp)\s+([0-9০-৯\/\.]+)/i : /(?:রক্তচাপ|ব্লাড\s+প্রেসার)\s+([0-9০-৯\/\.]+)/i,
+        issues: isEnglish ? /(?:issues|problems|notes)\s+([^\n]+)$/i : /(?:সমস্যা|নোট)\s+([^\n]+)$/i,
       };
 
       // Extract data using the patterns
@@ -298,12 +299,43 @@ export default function AddScreen() {
 
       // Update specific fields if matches were found
       if (nameMatch) updatedData.name = nameMatch[1];
-      if (ageMatch) updatedData.age = ageMatch[1];
-      if (phoneMatch) updatedData.phone = phoneMatch[1];
-      if (lmpMatch) updatedData.lmpDate = lmpMatch[1];
-      if (weightMatch) updatedData.weight = weightMatch[1];
-      if (heightMatch) updatedData.height = heightMatch[1];
-      if (bpMatch) updatedData.bloodPressure = bpMatch[1];
+
+      if (ageMatch) {
+        // Convert Bengali numerals to English if needed
+        updatedData.age = convertBengaliToEnglishNumerals(ageMatch[1]);
+      }
+
+      if (phoneMatch) {
+        // Clean up phone number by removing any non-digit characters and convert Bengali numerals
+        const cleanedPhone = phoneMatch[1].replace(/[\s\-]/g, '');
+        updatedData.phone = convertBengaliToEnglishNumerals(cleanedPhone);
+      }
+
+      if (lmpMatch) {
+        // Convert Bengali date format to English if needed
+        updatedData.lmpDate = convertBengaliToEnglishNumerals(lmpMatch[1]);
+      }
+
+      if (weightMatch) {
+        // Convert Bengali numerals to English if needed
+        updatedData.weight = convertBengaliToEnglishNumerals(weightMatch[1]);
+      }
+
+      if (heightMatch) {
+        // Convert Bengali numerals to English if needed
+        updatedData.height = convertBengaliToEnglishNumerals(heightMatch[1]);
+      }
+
+      if (bpMatch) {
+        // Convert Bengali numerals to English if needed
+        updatedData.bloodPressure = convertBengaliToEnglishNumerals(bpMatch[1]);
+      }
+
+      // Check for issues/notes
+      const issuesMatch = transcript.match(patterns.issues);
+      if (issuesMatch) {
+        updatedData.notes = issuesMatch[1];
+      }
 
       // If no specific matches were found, try to parse field-value pairs
       if (!nameMatch && !ageMatch && !phoneMatch && !lmpMatch && !weightMatch && !heightMatch && !bpMatch) {
@@ -330,45 +362,136 @@ export default function AddScreen() {
             i = j - 1; // Skip processed words
           }
           else if ((isEnglish && field === 'age') || (!isEnglish && field === 'বয়স')) {
-            if (/^\d+$/.test(value)) {
-              updatedData.age = value;
+            // Check if the value contains digits (either English or Bengali)
+            if (/^[0-9০-৯]+$/.test(value)) {
+              updatedData.age = convertBengaliToEnglishNumerals(value);
             }
             i++; // Skip the value
           }
           else if ((isEnglish && field === 'phone') || (!isEnglish && field === 'ফোন')) {
-            if (/^\d+$/.test(value)) {
-              updatedData.phone = value;
+            // Check if the next value contains digits (either English or Bengali)
+            if (/^[0-9০-৯\s\-]+$/.test(value)) {
+              // Clean up and convert Bengali numerals if needed
+              const cleanedPhone = value.replace(/[\s\-]/g, '');
+              updatedData.phone = convertBengaliToEnglishNumerals(cleanedPhone);
+              i++; // Skip the value
             }
-            i++; // Skip the value
+            // If not, try to collect digits from multiple words to form a phone number
+            else {
+              let phoneNumber = '';
+              let j = i + 1;
+              // Collect digits until we have 10 or reach the end of words
+              while (j < words.length && phoneNumber.length < 10) {
+                // Extract only digits from the current word (both English and Bengali)
+                const word = words[j];
+                for (let k = 0; k < word.length; k++) {
+                  if (/[0-9০-৯]/.test(word[k])) {
+                    phoneNumber += word[k];
+                  }
+                }
+                j++;
+              }
+
+              // Convert Bengali numerals to English
+              phoneNumber = convertBengaliToEnglishNumerals(phoneNumber);
+
+              // If we collected digits, use them as the phone number
+              if (phoneNumber.length > 0) {
+                updatedData.phone = phoneNumber;
+                i = j - 1; // Skip processed words
+              }
+            }
           }
           else if ((isEnglish && field === 'weight') || (!isEnglish && field === 'ওজন')) {
-            if (/^\d+$/.test(value)) {
-              updatedData.weight = value;
+            // Check if the value contains digits (either English or Bengali)
+            if (/^[0-9০-৯\.]+$/.test(value)) {
+              updatedData.weight = convertBengaliToEnglishNumerals(value);
             }
             i++; // Skip the value
           }
           else if ((isEnglish && field === 'height') || (!isEnglish && field === 'উচ্চতা')) {
-            if (/^\d+$/.test(value)) {
-              updatedData.height = value;
+            // Check if the value contains digits (either English or Bengali)
+            if (/^[0-9০-৯\.]+$/.test(value)) {
+              updatedData.height = convertBengaliToEnglishNumerals(value);
             }
             i++; // Skip the value
           }
-          else if ((isEnglish && field === 'bp') || (!isEnglish && field === 'রক্তচাপ')) {
-            updatedData.bloodPressure = value;
-            i++; // Skip the value
+          else if ((isEnglish && (field === 'bp' || field === 'blood')) ||
+                  (!isEnglish && (field === 'রক্তচাপ' || field === 'ব্লাড'))) {
+            // Handle "blood pressure" in English
+            if (isEnglish && field === 'blood' && i < words.length - 2 && words[i+1].toLowerCase() === 'pressure') {
+              const bpValue = words[i+2];
+              updatedData.bloodPressure = convertBengaliToEnglishNumerals(bpValue);
+              i += 2; // Skip the values
+            }
+            // Handle "ব্লাড প্রেসার" in Bengali
+            else if (!isEnglish && field === 'ব্লাড' && i < words.length - 2 && words[i+1].toLowerCase() === 'প্রেসার') {
+              const bpValue = words[i+2];
+              updatedData.bloodPressure = convertBengaliToEnglishNumerals(bpValue);
+              i += 2; // Skip the values
+            }
+            // Handle simple "bp" or "রক্তচাপ"
+            else {
+              updatedData.bloodPressure = convertBengaliToEnglishNumerals(value);
+              i++; // Skip the value
+            }
           }
-          else if ((isEnglish && field === 'lmp') || (!isEnglish && field === 'শেষ' && i < words.length - 2 && words[i+1] === 'মাসিক')) {
-            const lmpValue = isEnglish ? value : words[i + 2];
-            updatedData.lmpDate = lmpValue;
-            i += isEnglish ? 1 : 2; // Skip the value(s)
+          else if ((isEnglish && (field === 'lmp' || field === 'last')) ||
+                  (!isEnglish && (field === 'শেষ'))) {
+            // Handle "last menstrual period" in English
+            if (isEnglish && field === 'last' && i < words.length - 3 &&
+                words[i+1].toLowerCase() === 'menstrual' && words[i+2].toLowerCase() === 'period') {
+              const lmpValue = words[i+3];
+              updatedData.lmpDate = convertBengaliToEnglishNumerals(lmpValue);
+              i += 3; // Skip the values
+            }
+            // Handle "শেষ মাসিকের তারিখ" in Bengali
+            else if (!isEnglish && field === 'শেষ' && i < words.length - 3 &&
+                    words[i+1].toLowerCase() === 'মাসিকের' && words[i+2].toLowerCase() === 'তারিখ') {
+              const lmpValue = words[i+3];
+              updatedData.lmpDate = convertBengaliToEnglishNumerals(lmpValue);
+              i += 3; // Skip the values
+            }
+            // Handle "শেষ মাসিক" in Bengali
+            else if (!isEnglish && field === 'শেষ' && i < words.length - 2 && words[i+1].toLowerCase() === 'মাসিক') {
+              const lmpValue = words[i+2];
+              updatedData.lmpDate = convertBengaliToEnglishNumerals(lmpValue);
+              i += 2; // Skip the values
+            }
+            // Handle simple "lmp"
+            else if (isEnglish && field === 'lmp') {
+              updatedData.lmpDate = convertBengaliToEnglishNumerals(value);
+              i++; // Skip the value
+            }
+          }
+          // Handle "সমস্যা" (issues/problems) in Bengali
+          else if (!isEnglish && field === 'সমস্যা') {
+            let issueText = value;
+            let j = i + 2;
+            // Collect all remaining words as the issue text
+            while (j < words.length) {
+              issueText += ' ' + words[j];
+              j++;
+            }
+            updatedData.notes = issueText;
+            i = words.length; // Skip to the end
+          }
+          // Handle "issues" or "problems" in English
+          else if (isEnglish && (field === 'issues' || field === 'problems' || field === 'notes')) {
+            let issueText = value;
+            let j = i + 2;
+            // Collect all remaining words as the issue text
+            while (j < words.length) {
+              issueText += ' ' + words[j];
+              j++;
+            }
+            updatedData.notes = issueText;
+            i = words.length; // Skip to the end
           }
         }
       }
 
-      // Calculate EDD if LMP is available
-      if (updatedData.lmpDate) {
-        updatedData.eddDate = calculateEDD(updatedData.lmpDate);
-      }
+
 
       // Update state with the extracted data
       setPregnantData(updatedData);
@@ -390,12 +513,13 @@ export default function AddScreen() {
       const patterns = {
         name: isEnglish ? /name\s+([^\s,\.]+(?:\s+[^\s,\.]+)*)/i : /নাম\s+([^\s,।]+(?:\s+[^\s,।]+)*)/i,
         motherName: isEnglish ? /mother(?:'s)?\s+name\s+([^\s,\.]+(?:\s+[^\s,\.]+)*)/i : /মায়ের\s+নাম\s+([^\s,।]+(?:\s+[^\s,।]+)*)/i,
-        age: isEnglish ? /age\s+(\d+)/i : /বয়স\s+(\d+)/i,
-        phone: isEnglish ? /phone\s+(\d+)/i : /ফোন\s+(\d+)/i,
-        deliveryDate: isEnglish ? /delivery\s+date\s+([^\s,\.]+)/i : /প্রসবের\s+তারিখ\s+([^\s,।]+)/i,
-        babyWeight: isEnglish ? /baby(?:'s)?\s+weight\s+(\d+(?:\.\d+)?)/i : /শিশুর\s+ওজন\s+(\d+(?:\.\d+)?)/i,
-        motherWeight: isEnglish ? /mother(?:'s)?\s+weight\s+(\d+(?:\.\d+)?)/i : /মায়ের\s+ওজন\s+(\d+(?:\.\d+)?)/i,
-        bp: isEnglish ? /blood\s+pressure\s+([^\s,\.]+)/i : /রক্তচাপ\s+([^\s,।]+)/i,
+        age: isEnglish ? /age\s+([0-9০-৯]+)/i : /বয়স\s+([0-9০-৯]+)/i,
+        phone: isEnglish ? /phone(?:\s+number)?\s+([0-9০-৯\s\-]+)/i : /ফোন(?:\s+নম্বর)?\s+([0-9০-৯\s\-]+)/i,
+        deliveryDate: isEnglish ? /delivery\s+date\s+([0-9০-৯\/\-\.]+(?:\s+[0-9০-৯\/\-\.]+)*)/i : /প্রসবের\s+তারিখ\s+([0-9০-৯\/\-\.]+(?:\s+[0-9০-৯\/\-\.]+)*)/i,
+        babyWeight: isEnglish ? /baby(?:'s)?\s+weight\s+([0-9০-৯\.]+)/i : /শিশুর\s+ওজন\s+([0-9০-৯\.]+)/i,
+        motherWeight: isEnglish ? /mother(?:'s)?\s+weight\s+([0-9০-৯\.]+)/i : /মায়ের\s+ওজন\s+([0-9০-৯\.]+)/i,
+        bp: isEnglish ? /(?:blood\s+pressure|bp)\s+([0-9০-৯\/\.]+)/i : /(?:রক্তচাপ|ব্লাড\s+প্রেসার)\s+([0-9০-৯\/\.]+)/i,
+        issues: isEnglish ? /(?:issues|problems|notes)\s+([^\n]+)$/i : /(?:সমস্যা|নোট)\s+([^\n]+)$/i,
       };
 
       // Extract data using the patterns
@@ -409,12 +533,43 @@ export default function AddScreen() {
 
       // Update specific fields if matches were found
       if (nameMatch) updatedData.motherName = nameMatch[1];
-      if (ageMatch) updatedData.age = ageMatch[1];
-      if (phoneMatch) updatedData.phone = phoneMatch[1];
-      if (dateMatch) updatedData.deliveryDate = dateMatch[1];
-      if (babyWeightMatch) updatedData.babyWeight = babyWeightMatch[1];
-      if (motherWeightMatch) updatedData.motherWeight = motherWeightMatch[1];
-      if (bpMatch) updatedData.bloodPressure = bpMatch[1];
+
+      if (ageMatch) {
+        // Convert Bengali numerals to English if needed
+        updatedData.age = convertBengaliToEnglishNumerals(ageMatch[1]);
+      }
+
+      if (phoneMatch) {
+        // Clean up phone number by removing any non-digit characters and convert Bengali numerals
+        const cleanedPhone = phoneMatch[1].replace(/[\s\-]/g, '');
+        updatedData.phone = convertBengaliToEnglishNumerals(cleanedPhone);
+      }
+
+      if (dateMatch) {
+        // Convert Bengali date format to English if needed
+        updatedData.deliveryDate = convertBengaliToEnglishNumerals(dateMatch[1]);
+      }
+
+      if (babyWeightMatch) {
+        // Convert Bengali numerals to English if needed
+        updatedData.babyWeight = convertBengaliToEnglishNumerals(babyWeightMatch[1]);
+      }
+
+      if (motherWeightMatch) {
+        // Convert Bengali numerals to English if needed
+        updatedData.motherWeight = convertBengaliToEnglishNumerals(motherWeightMatch[1]);
+      }
+
+      if (bpMatch) {
+        // Convert Bengali numerals to English if needed
+        updatedData.bloodPressure = convertBengaliToEnglishNumerals(bpMatch[1]);
+      }
+
+      // Check for issues/notes
+      const issuesMatch = transcript.match(patterns.issues);
+      if (issuesMatch) {
+        updatedData.notes = issuesMatch[1];
+      }
 
       // If no specific matches were found, try to parse field-value pairs
       if (!nameMatch && !ageMatch && !phoneMatch && !dateMatch && !babyWeightMatch && !motherWeightMatch && !bpMatch) {
@@ -480,10 +635,33 @@ export default function AddScreen() {
             i++; // Skip the value
           }
           else if ((isEnglish && field === 'phone') || (!isEnglish && field === 'ফোন')) {
-            if (/^\d+$/.test(value)) {
+            // Check if the next value is a 10-digit number
+            if (/^\d{10}$/.test(value)) {
               updatedData.phone = value;
+              i++; // Skip the value
             }
-            i++; // Skip the value
+            // If not, try to collect digits from multiple words to form a 10-digit number
+            else {
+              let phoneNumber = '';
+              let j = i + 1;
+              // Collect digits until we have 10 or reach the end of words
+              while (j < words.length && phoneNumber.length < 10) {
+                // Extract only digits from the current word
+                const digits = words[j].replace(/\D/g, '');
+                phoneNumber += digits;
+                j++;
+              }
+
+              // If we collected 10 digits, use it as the phone number
+              if (phoneNumber.length === 10) {
+                updatedData.phone = phoneNumber;
+                i = j - 1; // Skip processed words
+              } else if (phoneNumber.length > 10) {
+                // If we collected more than 10 digits, use the first 10
+                updatedData.phone = phoneNumber.substring(0, 10);
+                i = j - 1; // Skip processed words
+              }
+            }
           }
           else if ((isEnglish && field === 'delivery' && i < words.length - 2 && words[i+1].toLowerCase() === 'date') ||
                   (!isEnglish && field === 'প্রসবের' && i < words.length - 2 && words[i+1].toLowerCase() === 'তারিখ')) {
@@ -553,10 +731,11 @@ export default function AddScreen() {
         name: isEnglish ? /name\s+([^\s,\.]+(?:\s+[^\s,\.]+)*)/i : /নাম\s+([^\s,।]+(?:\s+[^\s,।]+)*)/i,
         childName: isEnglish ? /child(?:'s)?\s+name\s+([^\s,\.]+(?:\s+[^\s,\.]+)*)/i : /শিশুর\s+নাম\s+([^\s,।]+(?:\s+[^\s,।]+)*)/i,
         motherName: isEnglish ? /mother(?:'s)?\s+name\s+([^\s,\.]+(?:\s+[^\s,\.]+)*)/i : /মায়ের\s+নাম\s+([^\s,।]+(?:\s+[^\s,।]+)*)/i,
-        dob: isEnglish ? /(?:date\s+of\s+birth|dob|birth\s+date)\s+([^\s,\.]+)/i : /জন্ম\s+তারিখ\s+([^\s,।]+)/i,
+        dob: isEnglish ? /(?:date\s+of\s+birth|dob|birth\s+date)\s+([0-9০-৯\/\-\.]+(?:\s+[0-9০-৯\/\-\.]+)*)/i : /জন্ম\s+তারিখ\s+([0-9০-৯\/\-\.]+(?:\s+[0-9০-৯\/\-\.]+)*)/i,
         gender: isEnglish ? /gender\s+([^\s,\.]+)/i : /লিঙ্গ\s+([^\s,।]+)/i,
-        weight: isEnglish ? /weight\s+(\d+(?:\.\d+)?)/i : /ওজন\s+(\d+(?:\.\d+)?)/i,
-        height: isEnglish ? /height\s+(\d+(?:\.\d+)?)/i : /উচ্চতা\s+(\d+(?:\.\d+)?)/i,
+        weight: isEnglish ? /weight\s+([0-9০-৯\.]+)/i : /ওজন\s+([0-9০-৯\.]+)/i,
+        height: isEnglish ? /height\s+([0-9০-৯\.]+)/i : /উচ্চতা\s+([0-9০-৯\.]+)/i,
+        issues: isEnglish ? /(?:issues|problems|notes)\s+([^\n]+)$/i : /(?:সমস্যা|নোট)\s+([^\n]+)$/i,
       };
 
       // Extract data using the patterns
@@ -570,7 +749,12 @@ export default function AddScreen() {
       // Update specific fields if matches were found
       if (nameMatch) updatedData.name = nameMatch[1];
       if (motherMatch) updatedData.motherName = motherMatch[1];
-      if (dobMatch) updatedData.dateOfBirth = dobMatch[1];
+
+      if (dobMatch) {
+        // Convert Bengali date format to English if needed
+        updatedData.dateOfBirth = convertBengaliToEnglishNumerals(dobMatch[1]);
+      }
+
       if (genderMatch) {
         const genderValue = genderMatch[1].toLowerCase();
         if (isEnglish) {
@@ -587,8 +771,22 @@ export default function AddScreen() {
           }
         }
       }
-      if (weightMatch) updatedData.weight = weightMatch[1];
-      if (heightMatch) updatedData.height = heightMatch[1];
+
+      if (weightMatch) {
+        // Convert Bengali numerals to English if needed
+        updatedData.weight = convertBengaliToEnglishNumerals(weightMatch[1]);
+      }
+
+      if (heightMatch) {
+        // Convert Bengali numerals to English if needed
+        updatedData.height = convertBengaliToEnglishNumerals(heightMatch[1]);
+      }
+
+      // Check for issues/notes
+      const issuesMatch = transcript.match(patterns.issues);
+      if (issuesMatch) {
+        updatedData.notes = issuesMatch[1];
+      }
 
       // If no specific matches were found, try to parse field-value pairs
       if (!nameMatch && !motherMatch && !dobMatch && !genderMatch && !weightMatch && !heightMatch) {
@@ -759,7 +957,6 @@ export default function AddScreen() {
           age: '',
           phone: '',
           lmpDate: '',
-          eddDate: '',
           weight: '',
           height: '',
           bloodPressure: '',
@@ -796,12 +993,26 @@ export default function AddScreen() {
     }, 1500);
   };
 
-  const calculateEDD = (lmpDate) => {
-    // This is a placeholder for calculating EDD from LMP
-    // In a real app, this would use a proper date calculation
-    console.log('Calculating EDD from LMP:', lmpDate);
-    return 'Calculated EDD will appear here';
+  // Helper function to convert Bengali numerals to English numerals
+  const convertBengaliToEnglishNumerals = (text) => {
+    if (!text) return text;
+
+    const bengaliNumerals = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+    let result = '';
+
+    for (let i = 0; i < text.length; i++) {
+      const bengaliIndex = bengaliNumerals.indexOf(text[i]);
+      if (bengaliIndex !== -1) {
+        result += bengaliIndex.toString();
+      } else {
+        result += text[i];
+      }
+    }
+
+    return result;
   };
+
+
 
   const renderPregnantWomenForm = () => {
     return (
@@ -834,28 +1045,12 @@ export default function AddScreen() {
           </View>
         </View>
 
-        <View style={styles.rowFields}>
-          <View style={styles.halfField}>
-            <BengaliTextInput
-              label={translations.lmpDate}
-              value={pregnantData.lmpDate}
-              onChangeText={(text) => {
-                const newData = {...pregnantData, lmpDate: text};
-                newData.eddDate = calculateEDD(text);
-                setPregnantData(newData);
-              }}
-              placeholder="YYYY-MM-DD"
-            />
-          </View>
-          <View style={styles.halfField}>
-            <BengaliTextInput
-              label={translations.eddDate}
-              value={pregnantData.eddDate}
-              editable={false}
-              placeholder={translations.autoCalculated}
-            />
-          </View>
-        </View>
+        <BengaliTextInput
+          label={translations.lmpDate}
+          value={pregnantData.lmpDate}
+          onChangeText={(text) => setPregnantData({...pregnantData, lmpDate: text})}
+          placeholder="YYYY-MM-DD"
+        />
 
         <View style={styles.rowFields}>
           <View style={styles.halfField}>
