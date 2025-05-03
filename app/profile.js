@@ -5,11 +5,16 @@ import { Ionicons } from '@expo/vector-icons';
 
 import BengaliText from '@/constants/BengaliText';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import BengaliTextInput from '@/components/BengaliTextInput';
 import BengaliButton from '@/components/BengaliButton';
+import LanguageToggle from '@/components/LanguageToggle';
+import BottomNavBar from '@/components/BottomNavBar';
+
 
 export default function ProfileScreen() {
   const { userProfile, logout } = useAuth();
+  const { isEnglish } = useLanguage();
   const [editing, setEditing] = useState(false);
   const [profileData, setProfileData] = useState({
     name: userProfile?.name || 'ASHA Mitra User',
@@ -37,14 +42,14 @@ export default function ProfileScreen() {
         {/* Header with Back Button */}
         <View style={styles.headerContainer}>
           <View style={styles.header}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.backButton}
               onPress={() => router.back()}
             >
               <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
             </TouchableOpacity>
             <Text style={styles.title}>প্রোফাইল</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.editButton}
               onPress={() => setEditing(!editing)}
             >
@@ -73,26 +78,26 @@ export default function ProfileScreen() {
                 value={profileData.name}
                 onChangeText={(text) => setProfileData({...profileData, name: text})}
               />
-              
+
               <BengaliTextInput
                 label="ফোন নম্বর"
                 value={profileData.phone}
                 onChangeText={(text) => setProfileData({...profileData, phone: text})}
                 keyboardType="phone-pad"
               />
-              
+
               <BengaliTextInput
                 label="জেলা"
                 value={profileData.district}
                 onChangeText={(text) => setProfileData({...profileData, district: text})}
               />
-              
+
               <BengaliTextInput
                 label="কেন্দ্র"
                 value={profileData.center}
                 onChangeText={(text) => setProfileData({...profileData, center: text})}
               />
-              
+
               <View style={styles.buttonContainer}>
                 <BengaliButton
                   title="সংরক্ষণ করুন"
@@ -109,7 +114,7 @@ export default function ProfileScreen() {
                   <Text style={styles.detailValue}>{profileData.phone}</Text>
                 </View>
               </View>
-              
+
               <View style={styles.detailItem}>
                 <Ionicons name="location-outline" size={24} color="#4A90E2" />
                 <View style={styles.detailContent}>
@@ -117,7 +122,7 @@ export default function ProfileScreen() {
                   <Text style={styles.detailValue}>{profileData.district}</Text>
                 </View>
               </View>
-              
+
               <View style={styles.detailItem}>
                 <Ionicons name="business-outline" size={24} color="#4A90E2" />
                 <View style={styles.detailContent}>
@@ -125,7 +130,7 @@ export default function ProfileScreen() {
                   <Text style={styles.detailValue}>{profileData.center}</Text>
                 </View>
               </View>
-              
+
               <TouchableOpacity
                 style={styles.logoutButton}
                 onPress={handleLogout}
@@ -137,6 +142,9 @@ export default function ProfileScreen() {
           )}
         </View>
       </ScrollView>
+
+      {/* Bottom Navigation Bar */}
+      <BottomNavBar />
     </SafeAreaView>
   );
 }
@@ -190,7 +198,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  
+  languageToggle: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+  },
+
   // Avatar Styles
   avatarContainer: {
     alignItems: 'center',
@@ -227,7 +240,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666666',
   },
-  
+
   // Details Styles
   detailsContainer: {
     paddingHorizontal: 20,
@@ -259,7 +272,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333333',
   },
-  
+
   // Edit Form Styles
   editForm: {
     backgroundColor: '#FFFFFF',
@@ -274,7 +287,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     marginTop: 20,
   },
-  
+
   // Logout Button
   logoutButton: {
     flexDirection: 'row',

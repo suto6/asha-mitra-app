@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -50,7 +50,7 @@ export default function SearchPatientScreen() {
   // Function to handle search
   const handleSearch = async (query = searchQuery) => {
     if (!query) {
-      Alert.alert(BengaliText.ERROR, BengaliText.REQUIRED_FIELD);
+      console.log(BengaliText.ERROR, BengaliText.REQUIRED_FIELD);
       return;
     }
 
@@ -82,7 +82,7 @@ export default function SearchPatientScreen() {
       }, 1000);
 
     } catch (error) {
-      Alert.alert(BengaliText.ERROR, error.message);
+      console.log(BengaliText.ERROR, error.message);
       setSearching(false);
     }
   };

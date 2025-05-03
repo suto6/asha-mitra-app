@@ -111,8 +111,8 @@ export default function AddScreen() {
         window.recognitionInstance = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         const recognition = window.recognitionInstance;
 
-        // Configure speech recognition
-        recognition.lang = 'bn-BD'; // Bengali language
+        // Configure speech recognition based on selected language
+        recognition.lang = isEnglish ? 'en-US' : 'bn-BD'; // English or Bengali based on toggle
         recognition.continuous = false;
         recognition.interimResults = true;
 
@@ -144,15 +144,15 @@ export default function AddScreen() {
       } catch (error) {
         console.error('Failed to start speech recognition:', error);
         setIsRecording(false);
-        alert('ভয়েস ইনপুট শুরু করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+        console.log('ভয়েস ইনপুট শুরু করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
 
         // Fallback for testing - simulate recording
-        alert('ফলব্যাক মোডে চলছে। আপনার ভয়েস ইনপুট সিমুলেট করা হচ্ছে।');
+        console.log('ফলব্যাক মোডে চলছে। আপনার ভয়েস ইনপুট সিমুলেট করা হচ্ছে।');
       }
     } else {
       // Fallback for browsers that don't support speech recognition
       console.log('Speech recognition not supported in this browser');
-      alert('আপনার ব্রাউজারে ভয়েস ইনপুট সমর্থিত নয়। ফলব্যাক মোডে চলছে।');
+      console.log('আপনার ব্রাউজারে ভয়েস ইনপুট সমর্থিত নয়। ফলব্যাক মোডে চলছে।');
 
       // For testing purposes, we'll use a timeout to simulate recording
       setTimeout(() => {
@@ -219,7 +219,7 @@ export default function AddScreen() {
         // Update state with fallback data
         setPregnantData(fallbackData);
         setIsProcessing(false);
-        alert('ফলব্যাক ডাটা ব্যবহার করা হয়েছে। আসল ভয়েস ইনপুট কাজ করছে না।');
+        console.log('ফলব্যাক ডাটা ব্যবহার করা হয়েছে। আসল ভয়েস ইনপুট কাজ করছে না।');
       }
       else if (activeTab === 'postnatal') {
         const fallbackData = {
@@ -238,7 +238,7 @@ export default function AddScreen() {
         // Update state with fallback data
         setPostnatalData(fallbackData);
         setIsProcessing(false);
-        alert('ফলব্যাক ডাটা ব্যবহার করা হয়েছে। আসল ভয়েস ইনপুট কাজ করছে না।');
+        console.log('ফলব্যাক ডাটা ব্যবহার করা হয়েছে। আসল ভয়েস ইনপুট কাজ করছে না।');
       }
       else if (activeTab === 'child') {
         const fallbackData = {
@@ -256,7 +256,7 @@ export default function AddScreen() {
         // Update state with fallback data
         setChildData(fallbackData);
         setIsProcessing(false);
-        alert('ফলব্যাক ডাটা ব্যবহার করা হয়েছে। আসল ভয়েস ইনপুট কাজ করছে না।');
+        console.log('ফলব্যাক ডাটা ব্যবহার করা হয়েছে। আসল ভয়েস ইনপুট কাজ করছে না।');
       }
     }
   };
@@ -270,21 +270,31 @@ export default function AddScreen() {
 
     // Process immediately without delay
     if (activeTab === 'pregnant') {
-      // Extract data from transcript
-      // This is a simplified example - in a real app, you would use NLP
-      const nameMatch = transcript.match(/নাম\s+([^\s,।]+(?:\s+[^\s,।]+)*)/i);
-      const ageMatch = transcript.match(/বয়স\s+(\d+)/i);
-      const phoneMatch = transcript.match(/ফোন\s+(\d+)/i);
-      const lmpMatch = transcript.match(/শেষ\s+মাসিক\s+([^\s,।]+(?:\s+[^\s,।]+)*)/i);
-      const weightMatch = transcript.match(/ওজন\s+(\d+)/i);
-      const heightMatch = transcript.match(/উচ্চতা\s+(\d+)/i);
-      const bpMatch = transcript.match(/রক্তচাপ\s+([^\s,।]+)/i);
-
       // Create a new data object with the current data
       const updatedData = { ...pregnantData };
 
       // Always keep the transcript in notes
       updatedData.notes = transcript;
+
+      // Define regex patterns for both Bengali and English
+      const patterns = {
+        name: isEnglish ? /name\s+([^\s,\.]+(?:\s+[^\s,\.]+)*)/i : /নাম\s+([^\s,।]+(?:\s+[^\s,।]+)*)/i,
+        age: isEnglish ? /age\s+(\d+)/i : /বয়স\s+(\d+)/i,
+        phone: isEnglish ? /phone\s+(\d+)/i : /ফোন\s+(\d+)/i,
+        lmp: isEnglish ? /lmp\s+([^\s,\.]+(?:\s+[^\s,\.]+)*)/i : /শেষ\s+মাসিক\s+([^\s,।]+(?:\s+[^\s,।]+)*)/i,
+        weight: isEnglish ? /weight\s+(\d+)/i : /ওজন\s+(\d+)/i,
+        height: isEnglish ? /height\s+(\d+)/i : /উচ্চতা\s+(\d+)/i,
+        bp: isEnglish ? /blood\s+pressure\s+([^\s,\.]+)/i : /রক্তচাপ\s+([^\s,।]+)/i,
+      };
+
+      // Extract data using the patterns
+      const nameMatch = transcript.match(patterns.name);
+      const ageMatch = transcript.match(patterns.age);
+      const phoneMatch = transcript.match(patterns.phone);
+      const lmpMatch = transcript.match(patterns.lmp);
+      const weightMatch = transcript.match(patterns.weight);
+      const heightMatch = transcript.match(patterns.height);
+      const bpMatch = transcript.match(patterns.bp);
 
       // Update specific fields if matches were found
       if (nameMatch) updatedData.name = nameMatch[1];
@@ -295,15 +305,63 @@ export default function AddScreen() {
       if (heightMatch) updatedData.height = heightMatch[1];
       if (bpMatch) updatedData.bloodPressure = bpMatch[1];
 
-      // If no specific matches were found, try to extract information based on position in the transcript
-      if (!nameMatch && !ageMatch && !phoneMatch && !lmpMatch) {
-        // Split the transcript by spaces and try to use words as field values
+      // If no specific matches were found, try to parse field-value pairs
+      if (!nameMatch && !ageMatch && !phoneMatch && !lmpMatch && !weightMatch && !heightMatch && !bpMatch) {
+        // Split the transcript into words
         const words = transcript.split(/\s+/);
-        if (words.length > 0 && !updatedData.name && words[0].length > 1) {
-          updatedData.name = words[0];
-        }
-        if (words.length > 1 && !updatedData.age && /^\d+$/.test(words[1])) {
-          updatedData.age = words[1];
+
+        // Process pairs of words (field name followed by value)
+        for (let i = 0; i < words.length - 1; i++) {
+          const field = words[i].toLowerCase();
+          const value = words[i + 1];
+
+          // Check if the current word is a field name
+          if ((isEnglish && field === 'name') || (!isEnglish && field === 'নাম')) {
+            // If the next word is the start of a name, collect all following words until we hit another field
+            let fullName = value;
+            let j = i + 2;
+            while (j < words.length &&
+                  !['name', 'age', 'phone', 'weight', 'height', 'lmp', 'নাম', 'বয়স', 'ফোন', 'ওজন', 'উচ্চতা', 'শেষ']
+                  .includes(words[j].toLowerCase())) {
+              fullName += ' ' + words[j];
+              j++;
+            }
+            updatedData.name = fullName;
+            i = j - 1; // Skip processed words
+          }
+          else if ((isEnglish && field === 'age') || (!isEnglish && field === 'বয়স')) {
+            if (/^\d+$/.test(value)) {
+              updatedData.age = value;
+            }
+            i++; // Skip the value
+          }
+          else if ((isEnglish && field === 'phone') || (!isEnglish && field === 'ফোন')) {
+            if (/^\d+$/.test(value)) {
+              updatedData.phone = value;
+            }
+            i++; // Skip the value
+          }
+          else if ((isEnglish && field === 'weight') || (!isEnglish && field === 'ওজন')) {
+            if (/^\d+$/.test(value)) {
+              updatedData.weight = value;
+            }
+            i++; // Skip the value
+          }
+          else if ((isEnglish && field === 'height') || (!isEnglish && field === 'উচ্চতা')) {
+            if (/^\d+$/.test(value)) {
+              updatedData.height = value;
+            }
+            i++; // Skip the value
+          }
+          else if ((isEnglish && field === 'bp') || (!isEnglish && field === 'রক্তচাপ')) {
+            updatedData.bloodPressure = value;
+            i++; // Skip the value
+          }
+          else if ((isEnglish && field === 'lmp') || (!isEnglish && field === 'শেষ' && i < words.length - 2 && words[i+1] === 'মাসিক')) {
+            const lmpValue = isEnglish ? value : words[i + 2];
+            updatedData.lmpDate = lmpValue;
+            i += isEnglish ? 1 : 2; // Skip the value(s)
+          }
         }
       }
 
@@ -318,37 +376,159 @@ export default function AddScreen() {
       // Processing complete
       setIsProcessing(false);
 
-      // Show success feedback
-      alert('ভয়েস ইনপুট সফলভাবে প্রক্রিয়া করা হয়েছে।');
+      // Log success message instead of showing alert
+      console.log(isEnglish ? 'Voice input processed successfully.' : 'ভয়েস ইনপুট সফলভাবে প্রক্রিয়া করা হয়েছে।');
     }
     else if (activeTab === 'postnatal') {
-      // Extract data for postnatal
-      const nameMatch = transcript.match(/নাম\s+([^\s,।]+(?:\s+[^\s,।]+)*)/i);
-      const ageMatch = transcript.match(/বয়স\s+(\d+)/i);
-      const phoneMatch = transcript.match(/ফোন\s+(\d+)/i);
-      const dateMatch = transcript.match(/তারিখ\s+([^\s,।]+)/i);
-
       // Create a new data object with the current data
       const updatedData = { ...postnatalData };
 
       // Always keep the transcript in notes
       updatedData.notes = transcript;
 
+      // Define regex patterns for both Bengali and English
+      const patterns = {
+        name: isEnglish ? /name\s+([^\s,\.]+(?:\s+[^\s,\.]+)*)/i : /নাম\s+([^\s,।]+(?:\s+[^\s,।]+)*)/i,
+        motherName: isEnglish ? /mother(?:'s)?\s+name\s+([^\s,\.]+(?:\s+[^\s,\.]+)*)/i : /মায়ের\s+নাম\s+([^\s,।]+(?:\s+[^\s,।]+)*)/i,
+        age: isEnglish ? /age\s+(\d+)/i : /বয়স\s+(\d+)/i,
+        phone: isEnglish ? /phone\s+(\d+)/i : /ফোন\s+(\d+)/i,
+        deliveryDate: isEnglish ? /delivery\s+date\s+([^\s,\.]+)/i : /প্রসবের\s+তারিখ\s+([^\s,।]+)/i,
+        babyWeight: isEnglish ? /baby(?:'s)?\s+weight\s+(\d+(?:\.\d+)?)/i : /শিশুর\s+ওজন\s+(\d+(?:\.\d+)?)/i,
+        motherWeight: isEnglish ? /mother(?:'s)?\s+weight\s+(\d+(?:\.\d+)?)/i : /মায়ের\s+ওজন\s+(\d+(?:\.\d+)?)/i,
+        bp: isEnglish ? /blood\s+pressure\s+([^\s,\.]+)/i : /রক্তচাপ\s+([^\s,।]+)/i,
+      };
+
+      // Extract data using the patterns
+      const nameMatch = transcript.match(patterns.name) || transcript.match(patterns.motherName);
+      const ageMatch = transcript.match(patterns.age);
+      const phoneMatch = transcript.match(patterns.phone);
+      const dateMatch = transcript.match(patterns.deliveryDate);
+      const babyWeightMatch = transcript.match(patterns.babyWeight);
+      const motherWeightMatch = transcript.match(patterns.motherWeight);
+      const bpMatch = transcript.match(patterns.bp);
+
       // Update specific fields if matches were found
       if (nameMatch) updatedData.motherName = nameMatch[1];
       if (ageMatch) updatedData.age = ageMatch[1];
       if (phoneMatch) updatedData.phone = phoneMatch[1];
       if (dateMatch) updatedData.deliveryDate = dateMatch[1];
+      if (babyWeightMatch) updatedData.babyWeight = babyWeightMatch[1];
+      if (motherWeightMatch) updatedData.motherWeight = motherWeightMatch[1];
+      if (bpMatch) updatedData.bloodPressure = bpMatch[1];
 
-      // If no specific matches were found, try to extract information based on position in the transcript
-      if (!nameMatch && !ageMatch && !phoneMatch && !dateMatch) {
-        // Split the transcript by spaces and try to use words as field values
+      // If no specific matches were found, try to parse field-value pairs
+      if (!nameMatch && !ageMatch && !phoneMatch && !dateMatch && !babyWeightMatch && !motherWeightMatch && !bpMatch) {
+        // Split the transcript into words
         const words = transcript.split(/\s+/);
-        if (words.length > 0 && !updatedData.motherName && words[0].length > 1) {
-          updatedData.motherName = words[0];
-        }
-        if (words.length > 1 && !updatedData.age && /^\d+$/.test(words[1])) {
-          updatedData.age = words[1];
+
+        // Process pairs of words (field name followed by value)
+        for (let i = 0; i < words.length - 1; i++) {
+          const field = words[i].toLowerCase();
+          const value = words[i + 1];
+
+          // Check if the current word is a field name
+          if ((isEnglish && (field === 'name' || field === 'mother')) || (!isEnglish && (field === 'নাম' || field === 'মায়ের'))) {
+            // Handle "mother's name" or "mother name" in English
+            if (isEnglish && field === 'mother' && i < words.length - 2) {
+              if (words[i+1].toLowerCase() === 'name' || words[i+1].toLowerCase() === "'s") {
+                let startIndex = words[i+1].toLowerCase() === "'s" && i < words.length - 3 && words[i+2].toLowerCase() === 'name' ? i + 3 : i + 2;
+                let fullName = words[startIndex];
+                let j = startIndex + 1;
+                while (j < words.length &&
+                      !['name', 'age', 'phone', 'delivery', 'baby', 'mother', 'blood', 'weight', 'bp',
+                        'নাম', 'বয়স', 'ফোন', 'প্রসবের', 'শিশুর', 'মায়ের', 'রক্তচাপ', 'ওজন']
+                      .includes(words[j].toLowerCase())) {
+                  fullName += ' ' + words[j];
+                  j++;
+                }
+                updatedData.motherName = fullName;
+                i = j - 1; // Skip processed words
+              }
+            }
+            // Handle "মায়ের নাম" in Bengali
+            else if (!isEnglish && field === 'মায়ের' && i < words.length - 2 && words[i+1].toLowerCase() === 'নাম') {
+              let fullName = words[i+2];
+              let j = i + 3;
+              while (j < words.length &&
+                    !['নাম', 'বয়স', 'ফোন', 'প্রসবের', 'শিশুর', 'মায়ের', 'রক্তচাপ', 'ওজন']
+                    .includes(words[j].toLowerCase())) {
+                fullName += ' ' + words[j];
+                j++;
+              }
+              updatedData.motherName = fullName;
+              i = j - 1; // Skip processed words
+            }
+            // Handle simple "name" field
+            else if ((isEnglish && field === 'name') || (!isEnglish && field === 'নাম')) {
+              let fullName = value;
+              let j = i + 2;
+              while (j < words.length &&
+                    !['name', 'age', 'phone', 'delivery', 'baby', 'mother', 'blood', 'weight', 'bp',
+                      'নাম', 'বয়স', 'ফোন', 'প্রসবের', 'শিশুর', 'মায়ের', 'রক্তচাপ', 'ওজন']
+                    .includes(words[j].toLowerCase())) {
+                fullName += ' ' + words[j];
+                j++;
+              }
+              updatedData.motherName = fullName;
+              i = j - 1; // Skip processed words
+            }
+          }
+          else if ((isEnglish && field === 'age') || (!isEnglish && field === 'বয়স')) {
+            if (/^\d+$/.test(value)) {
+              updatedData.age = value;
+            }
+            i++; // Skip the value
+          }
+          else if ((isEnglish && field === 'phone') || (!isEnglish && field === 'ফোন')) {
+            if (/^\d+$/.test(value)) {
+              updatedData.phone = value;
+            }
+            i++; // Skip the value
+          }
+          else if ((isEnglish && field === 'delivery' && i < words.length - 2 && words[i+1].toLowerCase() === 'date') ||
+                  (!isEnglish && field === 'প্রসবের' && i < words.length - 2 && words[i+1].toLowerCase() === 'তারিখ')) {
+            const dateValue = words[i + 2];
+            updatedData.deliveryDate = dateValue;
+            i += 2; // Skip the values
+          }
+          else if ((isEnglish && field === 'baby' && i < words.length - 2 &&
+                    (words[i+1].toLowerCase() === 'weight' || words[i+1].toLowerCase() === "'s")) ||
+                  (!isEnglish && field === 'শিশুর' && i < words.length - 2 && words[i+1].toLowerCase() === 'ওজন')) {
+            if (isEnglish) {
+              const valueIndex = words[i+1].toLowerCase() === "'s" ? i + 3 : i + 2;
+              if (valueIndex < words.length && /^\d+(\.\d+)?$/.test(words[valueIndex])) {
+                updatedData.babyWeight = words[valueIndex];
+              }
+              i = valueIndex; // Skip processed words
+            } else {
+              if (/^\d+(\.\d+)?$/.test(words[i+2])) {
+                updatedData.babyWeight = words[i+2];
+              }
+              i += 2; // Skip the values
+            }
+          }
+          else if ((isEnglish && field === 'mother' && i < words.length - 2 &&
+                    (words[i+1].toLowerCase() === 'weight' || words[i+1].toLowerCase() === "'s")) ||
+                  (!isEnglish && field === 'মায়ের' && i < words.length - 2 && words[i+1].toLowerCase() === 'ওজন')) {
+            if (isEnglish) {
+              const valueIndex = words[i+1].toLowerCase() === "'s" ? i + 3 : i + 2;
+              if (valueIndex < words.length && /^\d+(\.\d+)?$/.test(words[valueIndex])) {
+                updatedData.motherWeight = words[valueIndex];
+              }
+              i = valueIndex; // Skip processed words
+            } else {
+              if (/^\d+(\.\d+)?$/.test(words[i+2])) {
+                updatedData.motherWeight = words[i+2];
+              }
+              i += 2; // Skip the values
+            }
+          }
+          else if ((isEnglish && field === 'blood' && i < words.length - 2 && words[i+1].toLowerCase() === 'pressure') ||
+                  (!isEnglish && field === 'রক্তচাপ')) {
+            const bpValue = isEnglish ? words[i + 2] : value;
+            updatedData.bloodPressure = bpValue;
+            i += isEnglish ? 2 : 1; // Skip the values
+          }
         }
       }
 
@@ -358,37 +538,199 @@ export default function AddScreen() {
       // Processing complete
       setIsProcessing(false);
 
-      // Show success feedback
-      alert('ভয়েস ইনপুট সফলভাবে প্রক্রিয়া করা হয়েছে।');
+      // Log success message instead of showing alert
+      console.log(isEnglish ? 'Voice input processed successfully.' : 'ভয়েস ইনপুট সফলভাবে প্রক্রিয়া করা হয়েছে।');
     }
     else if (activeTab === 'child') {
-      // Extract data for child
-      const nameMatch = transcript.match(/নাম\s+([^\s,।]+(?:\s+[^\s,।]+)*)/i);
-      const motherMatch = transcript.match(/মায়ের\s+নাম\s+([^\s,।]+(?:\s+[^\s,।]+)*)/i);
-      const dobMatch = transcript.match(/জন্ম\s+তারিখ\s+([^\s,।]+)/i);
-      const genderMatch = transcript.match(/লিঙ্গ\s+([^\s,।]+)/i);
-
       // Create a new data object with the current data
       const updatedData = { ...childData };
 
       // Always keep the transcript in notes
       updatedData.notes = transcript;
 
+      // Define regex patterns for both Bengali and English
+      const patterns = {
+        name: isEnglish ? /name\s+([^\s,\.]+(?:\s+[^\s,\.]+)*)/i : /নাম\s+([^\s,।]+(?:\s+[^\s,।]+)*)/i,
+        childName: isEnglish ? /child(?:'s)?\s+name\s+([^\s,\.]+(?:\s+[^\s,\.]+)*)/i : /শিশুর\s+নাম\s+([^\s,।]+(?:\s+[^\s,।]+)*)/i,
+        motherName: isEnglish ? /mother(?:'s)?\s+name\s+([^\s,\.]+(?:\s+[^\s,\.]+)*)/i : /মায়ের\s+নাম\s+([^\s,।]+(?:\s+[^\s,।]+)*)/i,
+        dob: isEnglish ? /(?:date\s+of\s+birth|dob|birth\s+date)\s+([^\s,\.]+)/i : /জন্ম\s+তারিখ\s+([^\s,।]+)/i,
+        gender: isEnglish ? /gender\s+([^\s,\.]+)/i : /লিঙ্গ\s+([^\s,।]+)/i,
+        weight: isEnglish ? /weight\s+(\d+(?:\.\d+)?)/i : /ওজন\s+(\d+(?:\.\d+)?)/i,
+        height: isEnglish ? /height\s+(\d+(?:\.\d+)?)/i : /উচ্চতা\s+(\d+(?:\.\d+)?)/i,
+      };
+
+      // Extract data using the patterns
+      const nameMatch = transcript.match(patterns.name) || transcript.match(patterns.childName);
+      const motherMatch = transcript.match(patterns.motherName);
+      const dobMatch = transcript.match(patterns.dob);
+      const genderMatch = transcript.match(patterns.gender);
+      const weightMatch = transcript.match(patterns.weight);
+      const heightMatch = transcript.match(patterns.height);
+
       // Update specific fields if matches were found
       if (nameMatch) updatedData.name = nameMatch[1];
       if (motherMatch) updatedData.motherName = motherMatch[1];
       if (dobMatch) updatedData.dateOfBirth = dobMatch[1];
-      if (genderMatch) updatedData.gender = genderMatch[1];
-
-      // If no specific matches were found, try to extract information based on position in the transcript
-      if (!nameMatch && !motherMatch && !dobMatch && !genderMatch) {
-        // Split the transcript by spaces and try to use words as field values
-        const words = transcript.split(/\s+/);
-        if (words.length > 0 && !updatedData.name && words[0].length > 1) {
-          updatedData.name = words[0];
+      if (genderMatch) {
+        const genderValue = genderMatch[1].toLowerCase();
+        if (isEnglish) {
+          if (genderValue === 'boy' || genderValue === 'male') {
+            updatedData.gender = 'Boy';
+          } else if (genderValue === 'girl' || genderValue === 'female') {
+            updatedData.gender = 'Girl';
+          }
+        } else {
+          if (genderValue === 'ছেলে') {
+            updatedData.gender = 'ছেলে';
+          } else if (genderValue === 'মেয়ে') {
+            updatedData.gender = 'মেয়ে';
+          }
         }
-        if (words.length > 1 && !updatedData.motherName && words[1].length > 1) {
-          updatedData.motherName = words[1];
+      }
+      if (weightMatch) updatedData.weight = weightMatch[1];
+      if (heightMatch) updatedData.height = heightMatch[1];
+
+      // If no specific matches were found, try to parse field-value pairs
+      if (!nameMatch && !motherMatch && !dobMatch && !genderMatch && !weightMatch && !heightMatch) {
+        // Split the transcript into words
+        const words = transcript.split(/\s+/);
+
+        // Process pairs of words (field name followed by value)
+        for (let i = 0; i < words.length - 1; i++) {
+          const field = words[i].toLowerCase();
+          const value = words[i + 1];
+
+          // Check if the current word is a field name
+          if ((isEnglish && (field === 'name' || field === 'child')) || (!isEnglish && (field === 'নাম' || field === 'শিশুর'))) {
+            // Handle "child's name" or "child name" in English
+            if (isEnglish && field === 'child' && i < words.length - 2) {
+              if (words[i+1].toLowerCase() === 'name' || words[i+1].toLowerCase() === "'s") {
+                let startIndex = words[i+1].toLowerCase() === "'s" && i < words.length - 3 && words[i+2].toLowerCase() === 'name' ? i + 3 : i + 2;
+                let fullName = words[startIndex];
+                let j = startIndex + 1;
+                while (j < words.length &&
+                      !['name', 'age', 'mother', 'birth', 'date', 'gender', 'weight', 'height',
+                        'নাম', 'বয়স', 'মায়ের', 'জন্ম', 'তারিখ', 'লিঙ্গ', 'ওজন', 'উচ্চতা']
+                      .includes(words[j].toLowerCase())) {
+                  fullName += ' ' + words[j];
+                  j++;
+                }
+                updatedData.name = fullName;
+                i = j - 1; // Skip processed words
+              }
+            }
+            // Handle "শিশুর নাম" in Bengali
+            else if (!isEnglish && field === 'শিশুর' && i < words.length - 2 && words[i+1].toLowerCase() === 'নাম') {
+              let fullName = words[i+2];
+              let j = i + 3;
+              while (j < words.length &&
+                    !['নাম', 'বয়স', 'মায়ের', 'জন্ম', 'তারিখ', 'লিঙ্গ', 'ওজন', 'উচ্চতা']
+                    .includes(words[j].toLowerCase())) {
+                fullName += ' ' + words[j];
+                j++;
+              }
+              updatedData.name = fullName;
+              i = j - 1; // Skip processed words
+            }
+            // Handle simple "name" field
+            else if ((isEnglish && field === 'name') || (!isEnglish && field === 'নাম')) {
+              let fullName = value;
+              let j = i + 2;
+              while (j < words.length &&
+                    !['name', 'age', 'mother', 'birth', 'date', 'gender', 'weight', 'height',
+                      'নাম', 'বয়স', 'মায়ের', 'জন্ম', 'তারিখ', 'লিঙ্গ', 'ওজন', 'উচ্চতা']
+                    .includes(words[j].toLowerCase())) {
+                fullName += ' ' + words[j];
+                j++;
+              }
+              updatedData.name = fullName;
+              i = j - 1; // Skip processed words
+            }
+          }
+          else if ((isEnglish && field === 'mother' && i < words.length - 2) || (!isEnglish && field === 'মায়ের' && i < words.length - 2)) {
+            // Handle "mother's name" or "mother name" in English
+            if (isEnglish && (words[i+1].toLowerCase() === 'name' || words[i+1].toLowerCase() === "'s")) {
+              let startIndex = words[i+1].toLowerCase() === "'s" && i < words.length - 3 && words[i+2].toLowerCase() === 'name' ? i + 3 : i + 2;
+              let fullName = words[startIndex];
+              let j = startIndex + 1;
+              while (j < words.length &&
+                    !['name', 'age', 'child', 'birth', 'date', 'gender', 'weight', 'height',
+                      'নাম', 'বয়স', 'শিশুর', 'জন্ম', 'তারিখ', 'লিঙ্গ', 'ওজন', 'উচ্চতা']
+                    .includes(words[j].toLowerCase())) {
+                fullName += ' ' + words[j];
+                j++;
+              }
+              updatedData.motherName = fullName;
+              i = j - 1; // Skip processed words
+            }
+            // Handle "মায়ের নাম" in Bengali
+            else if (!isEnglish && words[i+1].toLowerCase() === 'নাম') {
+              let fullName = words[i+2];
+              let j = i + 3;
+              while (j < words.length &&
+                    !['নাম', 'বয়স', 'শিশুর', 'জন্ম', 'তারিখ', 'লিঙ্গ', 'ওজন', 'উচ্চতা']
+                    .includes(words[j].toLowerCase())) {
+                fullName += ' ' + words[j];
+                j++;
+              }
+              updatedData.motherName = fullName;
+              i = j - 1; // Skip processed words
+            }
+          }
+          else if ((isEnglish && (field === 'birth' || field === 'date' || field === 'dob')) ||
+                  (!isEnglish && (field === 'জন্ম'))) {
+            // Handle "birth date", "date of birth", or "dob" in English
+            if (isEnglish) {
+              let dateValue = '';
+              if (field === 'birth' && i < words.length - 2 && words[i+1].toLowerCase() === 'date') {
+                dateValue = words[i+2];
+                i += 2;
+              } else if (field === 'date' && i < words.length - 3 && words[i+1].toLowerCase() === 'of' && words[i+2].toLowerCase() === 'birth') {
+                dateValue = words[i+3];
+                i += 3;
+              } else if (field === 'dob') {
+                dateValue = value;
+                i += 1;
+              }
+              if (dateValue) {
+                updatedData.dateOfBirth = dateValue;
+              }
+            }
+            // Handle "জন্ম তারিখ" in Bengali
+            else if (!isEnglish && i < words.length - 2 && words[i+1].toLowerCase() === 'তারিখ') {
+              updatedData.dateOfBirth = words[i+2];
+              i += 2;
+            }
+          }
+          else if ((isEnglish && field === 'gender') || (!isEnglish && field === 'লিঙ্গ')) {
+            const genderValue = value.toLowerCase();
+            if (isEnglish) {
+              if (genderValue === 'boy' || genderValue === 'male') {
+                updatedData.gender = 'Boy';
+              } else if (genderValue === 'girl' || genderValue === 'female') {
+                updatedData.gender = 'Girl';
+              }
+            } else {
+              if (genderValue === 'ছেলে') {
+                updatedData.gender = 'ছেলে';
+              } else if (genderValue === 'মেয়ে') {
+                updatedData.gender = 'মেয়ে';
+              }
+            }
+            i++; // Skip the value
+          }
+          else if ((isEnglish && field === 'weight') || (!isEnglish && field === 'ওজন')) {
+            if (/^\d+(\.\d+)?$/.test(value)) {
+              updatedData.weight = value;
+            }
+            i++; // Skip the value
+          }
+          else if ((isEnglish && field === 'height') || (!isEnglish && field === 'উচ্চতা')) {
+            if (/^\d+(\.\d+)?$/.test(value)) {
+              updatedData.height = value;
+            }
+            i++; // Skip the value
+          }
         }
       }
 
@@ -398,8 +740,8 @@ export default function AddScreen() {
       // Processing complete
       setIsProcessing(false);
 
-      // Show success feedback
-      alert('ভয়েস ইনপুট সফলভাবে প্রক্রিয়া করা হয়েছে।');
+      // Log success message instead of showing alert
+      console.log(isEnglish ? 'Voice input processed successfully.' : 'ভয়েস ইনপুট সফলভাবে প্রক্রিয়া করা হয়েছে।');
     }
   };
 
@@ -449,8 +791,8 @@ export default function AddScreen() {
         });
       }
 
-      // Show success message (in a real app)
-      alert('Data saved successfully!');
+      // Log success message (in a real app)
+      console.log('Data saved successfully!');
     }, 1500);
   };
 
@@ -465,28 +807,28 @@ export default function AddScreen() {
     return (
       <View style={styles.formContainer}>
         <BengaliTextInput
-          label="নাম"
+          label={translations.name}
           value={pregnantData.name}
           onChangeText={(text) => setPregnantData({...pregnantData, name: text})}
-          placeholder="নাম লিখুন"
+          placeholder={translations.enterName}
         />
 
         <View style={styles.rowFields}>
           <View style={styles.halfField}>
             <BengaliTextInput
-              label="বয়স"
+              label={translations.age}
               value={pregnantData.age}
               onChangeText={(text) => setPregnantData({...pregnantData, age: text})}
-              placeholder="বয়স"
+              placeholder={translations.age}
               keyboardType="numeric"
             />
           </View>
           <View style={styles.halfField}>
             <BengaliTextInput
-              label="ফোন নম্বর"
+              label={translations.phone}
               value={pregnantData.phone}
               onChangeText={(text) => setPregnantData({...pregnantData, phone: text})}
-              placeholder="ফোন নম্বর"
+              placeholder={translations.phone}
               keyboardType="phone-pad"
             />
           </View>
@@ -495,7 +837,7 @@ export default function AddScreen() {
         <View style={styles.rowFields}>
           <View style={styles.halfField}>
             <BengaliTextInput
-              label="শেষ মাসিকের তারিখ (LMP)"
+              label={translations.lmpDate}
               value={pregnantData.lmpDate}
               onChangeText={(text) => {
                 const newData = {...pregnantData, lmpDate: text};
@@ -507,10 +849,10 @@ export default function AddScreen() {
           </View>
           <View style={styles.halfField}>
             <BengaliTextInput
-              label="সম্ভাব্য প্রসবের তারিখ (EDD)"
+              label={translations.eddDate}
               value={pregnantData.eddDate}
               editable={false}
-              placeholder="স্বয়ংক্রিয় গণনা"
+              placeholder={translations.autoCalculated}
             />
           </View>
         </View>
@@ -518,29 +860,29 @@ export default function AddScreen() {
         <View style={styles.rowFields}>
           <View style={styles.halfField}>
             <BengaliTextInput
-              label="ওজন (কেজি)"
+              label={translations.weight}
               value={pregnantData.weight}
               onChangeText={(text) => setPregnantData({...pregnantData, weight: text})}
-              placeholder="ওজন"
+              placeholder={translations.weight}
               keyboardType="numeric"
             />
           </View>
           <View style={styles.halfField}>
             <BengaliTextInput
-              label="উচ্চতা (সেমি)"
+              label={translations.height}
               value={pregnantData.height}
               onChangeText={(text) => setPregnantData({...pregnantData, height: text})}
-              placeholder="উচ্চতা"
+              placeholder={translations.height}
               keyboardType="numeric"
             />
           </View>
         </View>
 
         <BengaliTextInput
-          label="ব্লাড প্রেসার"
+          label={translations.bloodPressure}
           value={pregnantData.bloodPressure}
           onChangeText={(text) => setPregnantData({...pregnantData, bloodPressure: text})}
-          placeholder="উদাহরণ: 120/80"
+          placeholder={translations.bpExample}
         />
 
         <View style={styles.checkboxContainer}>
@@ -557,21 +899,21 @@ export default function AddScreen() {
               )}
             </View>
           </TouchableOpacity>
-          <Text style={styles.checkboxLabel}>উচ্চ ঝুঁকিপূর্ণ গর্ভাবস্থা</Text>
+          <Text style={styles.checkboxLabel}>{translations.highRiskPregnancy}</Text>
         </View>
 
         <BengaliTextInput
-          label="বিশেষ নোট / সমস্যা"
+          label={translations.notes}
           value={pregnantData.notes}
           onChangeText={(text) => setPregnantData({...pregnantData, notes: text})}
-          placeholder="বিশেষ নোট / সমস্যা"
+          placeholder={translations.notes}
           multiline={true}
           numberOfLines={4}
         />
 
         <View style={styles.buttonContainer}>
           <BengaliButton
-            title="সংরক্ষণ করুন"
+            title={translations.save}
             onPress={handleSave}
             loading={saving}
             disabled={!pregnantData.name || !pregnantData.age}
@@ -580,10 +922,10 @@ export default function AddScreen() {
           <View style={styles.reminderContainer}>
             <TouchableOpacity
               style={styles.reminderButton}
-              onPress={() => alert('Reminder set for next ANC visit')}
+              onPress={() => console.log('Reminder set for next ANC visit')}
             >
               <Ionicons name="notifications-outline" size={20} color="#4A90E2" />
-              <Text style={styles.reminderText}>পরবর্তী ANC পরিদর্শনের রিমাইন্ডার সেট করুন</Text>
+              <Text style={styles.reminderText}>{translations.setReminder}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -595,42 +937,42 @@ export default function AddScreen() {
     return (
       <View style={styles.formContainer}>
         <BengaliTextInput
-          label="মায়ের নাম"
+          label={translations.motherName}
           value={postnatalData.motherName}
           onChangeText={(text) => setPostnatalData({...postnatalData, motherName: text})}
-          placeholder="মায়ের নাম লিখুন"
+          placeholder={translations.motherName}
         />
 
         <View style={styles.rowFields}>
           <View style={styles.halfField}>
             <BengaliTextInput
-              label="বয়স"
+              label={translations.age}
               value={postnatalData.age}
               onChangeText={(text) => setPostnatalData({...postnatalData, age: text})}
-              placeholder="বয়স"
+              placeholder={translations.age}
               keyboardType="numeric"
             />
           </View>
           <View style={styles.halfField}>
             <BengaliTextInput
-              label="ফোন নম্বর"
+              label={translations.phone}
               value={postnatalData.phone}
               onChangeText={(text) => setPostnatalData({...postnatalData, phone: text})}
-              placeholder="ফোন নম্বর"
+              placeholder={translations.phone}
               keyboardType="phone-pad"
             />
           </View>
         </View>
 
         <BengaliTextInput
-          label="প্রসবের তারিখ"
+          label={translations.deliveryDate}
           value={postnatalData.deliveryDate}
           onChangeText={(text) => setPostnatalData({...postnatalData, deliveryDate: text})}
           placeholder="YYYY-MM-DD"
         />
 
         <View style={styles.radioContainer}>
-          <Text style={styles.radioLabel}>প্রসবের ধরন:</Text>
+          <Text style={styles.radioLabel}>{translations.deliveryType}</Text>
           <View style={styles.radioOptions}>
             <TouchableOpacity
               style={styles.radioOption}
@@ -644,7 +986,7 @@ export default function AddScreen() {
                   <View style={styles.radioButtonInner} />
                 )}
               </View>
-              <Text style={styles.radioText}>স্বাভাবিক</Text>
+              <Text style={styles.radioText}>{translations.normal}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -659,7 +1001,7 @@ export default function AddScreen() {
                   <View style={styles.radioButtonInner} />
                 )}
               </View>
-              <Text style={styles.radioText}>সিজারিয়ান</Text>
+              <Text style={styles.radioText}>{translations.cesarean}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -667,43 +1009,43 @@ export default function AddScreen() {
         <View style={styles.rowFields}>
           <View style={styles.halfField}>
             <BengaliTextInput
-              label="শিশুর ওজন (কেজি)"
+              label={translations.babyWeight}
               value={postnatalData.babyWeight}
               onChangeText={(text) => setPostnatalData({...postnatalData, babyWeight: text})}
-              placeholder="শিশুর ওজন"
+              placeholder={translations.babyWeight}
               keyboardType="numeric"
             />
           </View>
           <View style={styles.halfField}>
             <BengaliTextInput
-              label="মায়ের ওজন (কেজি)"
+              label={translations.motherWeight}
               value={postnatalData.motherWeight}
               onChangeText={(text) => setPostnatalData({...postnatalData, motherWeight: text})}
-              placeholder="মায়ের ওজন"
+              placeholder={translations.motherWeight}
               keyboardType="numeric"
             />
           </View>
         </View>
 
         <BengaliTextInput
-          label="ব্লাড প্রেসার"
+          label={translations.bloodPressure}
           value={postnatalData.bloodPressure}
           onChangeText={(text) => setPostnatalData({...postnatalData, bloodPressure: text})}
-          placeholder="উদাহরণ: 120/80"
+          placeholder={translations.bpExample}
         />
 
         <BengaliTextInput
-          label="বিশেষ নোট / সমস্যা"
+          label={translations.notes}
           value={postnatalData.notes}
           onChangeText={(text) => setPostnatalData({...postnatalData, notes: text})}
-          placeholder="বিশেষ নোট / সমস্যা"
+          placeholder={translations.notes}
           multiline={true}
           numberOfLines={4}
         />
 
         <View style={styles.buttonContainer}>
           <BengaliButton
-            title="সংরক্ষণ করুন"
+            title={translations.save}
             onPress={handleSave}
             loading={saving}
             disabled={!postnatalData.motherName || !postnatalData.deliveryDate}
@@ -712,10 +1054,10 @@ export default function AddScreen() {
           <View style={styles.reminderContainer}>
             <TouchableOpacity
               style={styles.reminderButton}
-              onPress={() => alert('Reminder set for next PNC visit')}
+              onPress={() => console.log('Reminder set for next PNC visit')}
             >
               <Ionicons name="notifications-outline" size={20} color="#4A90E2" />
-              <Text style={styles.reminderText}>পরবর্তী PNC পরিদর্শনের রিমাইন্ডার সেট করুন</Text>
+              <Text style={styles.reminderText}>{translations.setPncReminder}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -727,23 +1069,23 @@ export default function AddScreen() {
     return (
       <View style={styles.formContainer}>
         <BengaliTextInput
-          label="শিশুর নাম"
+          label={translations.childName}
           value={childData.name}
           onChangeText={(text) => setChildData({...childData, name: text})}
-          placeholder="শিশুর নাম লিখুন"
+          placeholder={translations.childName}
         />
 
         <BengaliTextInput
-          label="মায়ের নাম"
+          label={translations.motherName}
           value={childData.motherName}
           onChangeText={(text) => setChildData({...childData, motherName: text})}
-          placeholder="মায়ের নাম লিখুন"
+          placeholder={translations.motherName}
         />
 
         <View style={styles.rowFields}>
           <View style={styles.halfField}>
             <BengaliTextInput
-              label="জন্ম তারিখ"
+              label={translations.dateOfBirth}
               value={childData.dateOfBirth}
               onChangeText={(text) => setChildData({...childData, dateOfBirth: text})}
               placeholder="YYYY-MM-DD"
@@ -751,36 +1093,36 @@ export default function AddScreen() {
           </View>
           <View style={styles.halfField}>
             <View style={styles.radioContainer}>
-              <Text style={styles.radioLabel}>লিঙ্গ:</Text>
+              <Text style={styles.radioLabel}>{translations.gender}</Text>
               <View style={styles.radioOptions}>
                 <TouchableOpacity
                   style={styles.radioOption}
-                  onPress={() => setChildData({...childData, gender: 'ছেলে'})}
+                  onPress={() => setChildData({...childData, gender: isEnglish ? 'Boy' : 'ছেলে'})}
                 >
                   <View style={[
                     styles.radioButton,
-                    childData.gender === 'ছেলে' && styles.radioButtonSelected
+                    (childData.gender === 'ছেলে' || childData.gender === 'Boy') && styles.radioButtonSelected
                   ]}>
-                    {childData.gender === 'ছেলে' && (
+                    {(childData.gender === 'ছেলে' || childData.gender === 'Boy') && (
                       <View style={styles.radioButtonInner} />
                     )}
                   </View>
-                  <Text style={styles.radioText}>ছেলে</Text>
+                  <Text style={styles.radioText}>{translations.boy}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   style={styles.radioOption}
-                  onPress={() => setChildData({...childData, gender: 'মেয়ে'})}
+                  onPress={() => setChildData({...childData, gender: isEnglish ? 'Girl' : 'মেয়ে'})}
                 >
                   <View style={[
                     styles.radioButton,
-                    childData.gender === 'মেয়ে' && styles.radioButtonSelected
+                    (childData.gender === 'মেয়ে' || childData.gender === 'Girl') && styles.radioButtonSelected
                   ]}>
-                    {childData.gender === 'মেয়ে' && (
+                    {(childData.gender === 'মেয়ে' || childData.gender === 'Girl') && (
                       <View style={styles.radioButtonInner} />
                     )}
                   </View>
-                  <Text style={styles.radioText}>মেয়ে</Text>
+                  <Text style={styles.radioText}>{translations.girl}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -790,33 +1132,33 @@ export default function AddScreen() {
         <View style={styles.rowFields}>
           <View style={styles.halfField}>
             <BengaliTextInput
-              label="ওজন (কেজি)"
+              label={translations.weight}
               value={childData.weight}
               onChangeText={(text) => setChildData({...childData, weight: text})}
-              placeholder="ওজন"
+              placeholder={translations.weight}
               keyboardType="numeric"
             />
           </View>
           <View style={styles.halfField}>
             <BengaliTextInput
-              label="উচ্চতা (সেমি)"
+              label={translations.height}
               value={childData.height}
               onChangeText={(text) => setChildData({...childData, height: text})}
-              placeholder="উচ্চতা"
+              placeholder={translations.height}
               keyboardType="numeric"
             />
           </View>
         </View>
 
         <View style={styles.dropdownContainer}>
-          <Text style={styles.dropdownLabel}>টিকাদান স্ট্যাটাস:</Text>
+          <Text style={styles.dropdownLabel}>{translations.immunizationStatus}</Text>
           <View style={styles.dropdown}>
             <TouchableOpacity
               style={styles.dropdownButton}
-              onPress={() => alert('Show dropdown options')}
+              onPress={() => console.log('Show dropdown options')}
             >
               <Text style={styles.dropdownButtonText}>
-                {childData.immunizationStatus || 'টিকাদান স্ট্যাটাস নির্বাচন করুন'}
+                {childData.immunizationStatus || translations.selectStatus}
               </Text>
               <Ionicons name="chevron-down" size={20} color="#666666" />
             </TouchableOpacity>
@@ -824,17 +1166,17 @@ export default function AddScreen() {
         </View>
 
         <BengaliTextInput
-          label="বিশেষ নোট / সমস্যা"
+          label={translations.notes}
           value={childData.notes}
           onChangeText={(text) => setChildData({...childData, notes: text})}
-          placeholder="বিশেষ নোট / সমস্যা"
+          placeholder={translations.notes}
           multiline={true}
           numberOfLines={4}
         />
 
         <View style={styles.buttonContainer}>
           <BengaliButton
-            title="সংরক্ষণ করুন"
+            title={translations.save}
             onPress={handleSave}
             loading={saving}
             disabled={!childData.name || !childData.dateOfBirth}
@@ -843,10 +1185,10 @@ export default function AddScreen() {
           <View style={styles.reminderContainer}>
             <TouchableOpacity
               style={styles.reminderButton}
-              onPress={() => alert('Reminder set for next immunization')}
+              onPress={() => console.log('Reminder set for next immunization')}
             >
               <Ionicons name="notifications-outline" size={20} color="#4A90E2" />
-              <Text style={styles.reminderText}>পরবর্তী টিকাদানের রিমাইন্ডার সেট করুন</Text>
+              <Text style={styles.reminderText}>{translations.setImmunizationReminder}</Text>
             </TouchableOpacity>
           </View>
         </View>

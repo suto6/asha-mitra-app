@@ -2,15 +2,17 @@ import React, { useState } from 'react';
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import BengaliText from '../constants/BengaliText';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // Voice input button with recording state indicators
-const VoiceInputButton = ({ 
-  onStartRecording, 
-  onStopRecording, 
+const VoiceInputButton = ({
+  onStartRecording,
+  onStopRecording,
   isRecording = false,
   isProcessing = false,
-  style 
+  style
 }) => {
+  const { isEnglish } = useLanguage();
   const handlePress = () => {
     if (isRecording) {
       onStopRecording();
@@ -34,22 +36,24 @@ const VoiceInputButton = ({
         {isProcessing ? (
           <>
             <ActivityIndicator size="large" color="#FFFFFF" />
-            <Text style={styles.buttonText}>{BengaliText.PROCESSING}</Text>
+            <Text style={styles.buttonText}>{isEnglish ? "Processing..." : BengaliText.PROCESSING}</Text>
           </>
         ) : (
           <>
-            <Ionicons 
-              name={isRecording ? "mic" : "mic-outline"} 
-              size={32} 
-              color="#FFFFFF" 
+            <Ionicons
+              name={isRecording ? "mic" : "mic-outline"}
+              size={32}
+              color="#FFFFFF"
               style={styles.icon}
             />
             <Text style={styles.buttonText}>
-              {isRecording ? BengaliText.STOP_RECORDING : BengaliText.START_RECORDING}
+              {isRecording
+                ? (isEnglish ? "Stop Recording" : BengaliText.STOP_RECORDING)
+                : (isEnglish ? "Start Recording" : BengaliText.START_RECORDING)}
             </Text>
             {isRecording && (
               <View style={styles.recordingIndicator}>
-                <Text style={styles.recordingText}>{BengaliText.LISTENING}</Text>
+                <Text style={styles.recordingText}>{isEnglish ? "Listening..." : BengaliText.LISTENING}</Text>
                 <View style={styles.pulsatingDot} />
               </View>
             )}
