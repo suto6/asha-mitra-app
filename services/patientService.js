@@ -157,3 +157,103 @@ export const addHealthRecord = async (patientId, recordData) => {
     return { success: false, error: error.message };
   }
 };
+
+// Function to add an appointment
+export const addAppointment = async (appointmentData) => {
+  try {
+    // Validate required fields
+    if (!appointmentData.patientId || !appointmentData.date || !appointmentData.time) {
+      throw new Error('Patient ID, date, and time are required');
+    }
+
+    // Get patient details to include in the appointment
+    const patientResult = await localStorageService.getPatientById(appointmentData.patientId);
+
+    if (!patientResult.success) {
+      throw new Error(patientResult.error);
+    }
+
+    // Create appointment data with patient details
+    const appointment = {
+      patientId: appointmentData.patientId,
+      patientName: patientResult.patient.name,
+      patientType: patientResult.patient.type || 'general',
+      appointmentType: appointmentData.appointmentType || 'checkup',
+      date: appointmentData.date,
+      time: appointmentData.time,
+      notes: appointmentData.notes || '',
+    };
+
+    // Add the appointment
+    const result = await localStorageService.addAppointment(appointment);
+
+    if (!result.success) {
+      throw new Error(result.error);
+    }
+
+    return {
+      success: true,
+      appointmentId: result.appointment.id,
+      appointment: result.appointment
+    };
+  } catch (error) {
+    console.error('Add appointment error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Function to get all appointments
+export const getAllAppointments = async () => {
+  try {
+    const result = await localStorageService.getAllAppointments();
+
+    if (!result.success) {
+      throw new Error(result.error);
+    }
+
+    return {
+      success: true,
+      appointments: result.appointments
+    };
+  } catch (error) {
+    console.error('Get all appointments error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Function to get appointments by date
+export const getAppointmentsByDate = async (date) => {
+  try {
+    const result = await localStorageService.getAppointmentsByDate(date);
+
+    if (!result.success) {
+      throw new Error(result.error);
+    }
+
+    return {
+      success: true,
+      appointments: result.appointments
+    };
+  } catch (error) {
+    console.error('Get appointments by date error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Function to delete an appointment
+export const deleteAppointment = async (appointmentId) => {
+  try {
+    const result = await localStorageService.deleteAppointment(appointmentId);
+
+    if (!result.success) {
+      throw new Error(result.error);
+    }
+
+    return {
+      success: true
+    };
+  } catch (error) {
+    console.error('Delete appointment error:', error);
+    return { success: false, error: error.message };
+  }
+};
