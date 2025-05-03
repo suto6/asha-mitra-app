@@ -10,7 +10,7 @@ import MeetingItem from '@/components/MeetingItem';
 import BottomNavBar from '@/components/BottomNavBar';
 import LanguageToggle from '@/components/LanguageToggle';
 import BengaliText from '@/constants/BengaliText';
-import { searchPatientsByName } from '@/services/patientService';
+import { searchPatientsByName, getAppointmentsByDate, toggleAppointmentCompletion } from '@/services/patientService';
 
 export default function DashboardScreen() {
   const { userProfile, logout } = useAuth();
@@ -61,28 +61,13 @@ export default function DashboardScreen() {
 
   const [recentPatients, setRecentPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(false);
+  const [todaysAppointments, setTodaysAppointments] = useState([]);
+  const [loadingAppointments, setLoadingAppointments] = useState(false);
 
   const dailyStatus = {
     assigned: 29,
     open: 10,
   };
-
-  const todaysMeetings = [
-    {
-      id: '1',
-      title: 'Synit Prakashen',
-      subtitle: 'Maternal UHID',
-      time: '3:00 PM',
-      status: 'upcoming',
-    },
-    {
-      id: '2',
-      title: 'Synit Prakashen',
-      subtitle: 'Maternal UHID',
-      time: '5:00 PM',
-      status: 'upcoming',
-    },
-  ];
 
   // Function to fetch recent patients
   const fetchRecentPatients = async () => {
@@ -93,7 +78,7 @@ export default function DashboardScreen() {
 
       if (result.success && result.patients.length > 0) {
         // Map the data to match our Patient interface
-        const patients = result.patients.map(patient => ({
+        const patients = result.patients.map((patient: any) => ({
           id: patient.id,
           name: patient.name,
           age: patient.age,
@@ -116,11 +101,63 @@ export default function DashboardScreen() {
     }
   };
 
+  // Function to fetch today's appointments
+  const fetchTodaysAppointments = async () => {
+    setLoadingAppointments(true);
+    try {
+      // Get today's date in YYYY-MM-DD format
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      const formattedToday = `${year}-${month}-${day}`;
+
+      console.log('Dashboard - Today\'s date (formatted):', formattedToday);
+
+      // Fetch appointments for today
+      const result = await getAppointmentsByDate(formattedToday);
+
+      if (result.success) {
+        console.log('Dashboard - Appointments found:', result.appointments.length);
+        console.log('Dashboard - Appointment dates:', result.appointments.map((a: any) => a.date));
+        setTodaysAppointments(result.appointments);
+      } else {
+        console.error('Failed to fetch today\'s appointments:', result.error);
+        setTodaysAppointments([]);
+      }
+    } catch (error) {
+      console.error('Error fetching today\'s appointments:', error);
+      setTodaysAppointments([]);
+    } finally {
+      setLoadingAppointments(false);
+    }
+  };
+
+  // Function to toggle appointment completion
+  const handleToggleCompletion = async (appointmentId: string, event: any) => {
+    // Prevent the parent TouchableOpacity from being triggered
+    event.stopPropagation();
+
+    try {
+      const result = await toggleAppointmentCompletion(appointmentId);
+
+      if (result.success) {
+        // Refresh the appointments list
+        fetchTodaysAppointments();
+      } else {
+        console.error('Failed to toggle appointment completion:', result.error);
+      }
+    } catch (error) {
+      console.error('Error toggling appointment completion:', error);
+    }
+  };
+
   // Use useFocusEffect to refresh data when the screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
       console.log('Dashboard focused, refreshing data...');
       fetchRecentPatients();
+      fetchTodaysAppointments();
 
       // No cleanup needed for this effect
       return () => {};
@@ -194,30 +231,6 @@ export default function DashboardScreen() {
               </LinearGradient>
             </View>
 
-            {/* Daily Tasks Card */}
-            <View style={styles.summaryCard}>
-              <Text style={styles.sectionTitle}>{translations.todaysTasks}</Text>
-              <View style={styles.summaryContent}>
-                <View style={[styles.summaryItem, styles.summaryItem1]}>
-                  <View style={styles.summaryIconContainer}>
-                    <Ionicons name="woman" size={24} color="#FFFFFF" />
-                  </View>
-                  <Text style={styles.summaryText}>২ টি {translations.ancCheckups}</Text>
-                </View>
-                <View style={[styles.summaryItem, styles.summaryItem2]}>
-                  <View style={styles.summaryIconContainer}>
-                    <Ionicons name="medkit-outline" size={24} color="#FFFFFF" />
-                  </View>
-                  <Text style={styles.summaryText}>১ টি {translations.immunizationDue}</Text>
-                </View>
-                <View style={[styles.summaryItem, styles.summaryItem3]}>
-                  <View style={styles.summaryIconContainer}>
-                    <Ionicons name="warning-outline" size={24} color="#FFFFFF" />
-                  </View>
-                  <Text style={styles.summaryText}>১ জন {translations.highRiskPregnant}</Text>
-                </View>
-              </View>
-            </View>
 
             {/* Today's Appointments */}
             <View style={styles.appointmentsSection}>
@@ -233,41 +246,101 @@ export default function DashboardScreen() {
               </View>
 
               <View style={styles.appointmentsList}>
-                <TouchableOpacity style={styles.appointmentCard} activeOpacity={0.7}>
-                  <View style={[styles.appointmentTypeIndicator, { backgroundColor: '#4A90E2' }]} />
-                  <View style={styles.appointmentTimeContainer}>
-                    <Text style={styles.appointmentTime}>10:00</Text>
-                    <Text style={styles.appointmentTimeAMPM}>AM</Text>
+                {loadingAppointments ? (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#4A90E2" />
+                    <Text style={styles.loadingText}>
+                      {isEnglish ? 'Loading appointments...' : 'অ্যাপয়েন্টমেন্ট লোড হচ্ছে...'}
+                    </Text>
                   </View>
-                  <View style={styles.appointmentDetails}>
-                    <Text style={styles.appointmentTitle}>পিঙ্কি বিশ্বাস</Text>
-                    <Text style={styles.appointmentSubtitle}>{translations.ancCheckup}</Text>
-                  </View>
-                  <View style={styles.appointmentActions}>
-                    <TouchableOpacity style={styles.completeButton}>
-                      <Text style={styles.completeButtonText}>{translations.markComplete}</Text>
-                    </TouchableOpacity>
-                    <Ionicons name="chevron-forward" size={24} color="#CCCCCC" />
-                  </View>
-                </TouchableOpacity>
+                ) : todaysAppointments.length > 0 ? (
+                  todaysAppointments.map((appointment: any) => {
+                    // Get appointment type color
+                    const typeColor = appointment.appointmentType === 'anc' ? '#4A90E2' :
+                                      appointment.appointmentType === 'immunization' ? '#FF9500' :
+                                      '#34C759';
 
-                <TouchableOpacity style={styles.appointmentCard} activeOpacity={0.7}>
-                  <View style={[styles.appointmentTypeIndicator, { backgroundColor: '#FF9500' }]} />
-                  <View style={styles.appointmentTimeContainer}>
-                    <Text style={styles.appointmentTime}>11:30</Text>
-                    <Text style={styles.appointmentTimeAMPM}>AM</Text>
-                  </View>
-                  <View style={styles.appointmentDetails}>
-                    <Text style={styles.appointmentTitle}>অনিতা দাস</Text>
-                    <Text style={styles.appointmentSubtitle}>{translations.immunization}</Text>
-                  </View>
-                  <View style={styles.appointmentActions}>
-                    <TouchableOpacity style={styles.completeButton}>
-                      <Text style={styles.completeButtonText}>{translations.markComplete}</Text>
+                    // Get appointment type text
+                    const typeText = appointment.appointmentType === 'anc' ? translations.ancCheckup :
+                                     appointment.appointmentType === 'immunization' ? translations.immunization :
+                                     isEnglish ? 'Checkup' : 'চেকআপ';
+
+                    // Split time into hours and AM/PM
+                    const timeParts = appointment.time ? appointment.time.split(' ') : ['', ''];
+                    const timeValue = timeParts[0] || '';
+                    const timePeriod = timeParts[1] || '';
+
+                    return (
+                      <TouchableOpacity
+                        key={appointment.id}
+                        style={[
+                          styles.appointmentCard,
+                          appointment.completed && styles.completedAppointmentCard
+                        ]}
+                        activeOpacity={0.7}
+                        onPress={() => router.push({
+                          pathname: '/patient/[id]',
+                          params: { id: appointment.patientId }
+                        })}
+                      >
+                        <View style={[styles.appointmentTypeIndicator, { backgroundColor: typeColor }]} />
+                        <View style={styles.appointmentTimeContainer}>
+                          <Text style={[
+                            styles.appointmentTime,
+                            appointment.completed && styles.completedText
+                          ]}>{timeValue}</Text>
+                          <Text style={[
+                            styles.appointmentTimeAMPM,
+                            appointment.completed && styles.completedText
+                          ]}>{timePeriod}</Text>
+                        </View>
+                        <View style={styles.appointmentDetails}>
+                          <Text style={[
+                            styles.appointmentTitle,
+                            appointment.completed && styles.completedText
+                          ]}>{appointment.patientName}</Text>
+                          <Text style={[
+                            styles.appointmentSubtitle,
+                            appointment.completed && styles.completedText
+                          ]}>{typeText}</Text>
+                        </View>
+                        <View style={styles.appointmentActions}>
+                          <TouchableOpacity
+                            style={[
+                              styles.checkboxContainer,
+                              appointment.completed && styles.checkboxContainerChecked
+                            ]}
+                            onPress={(e) => handleToggleCompletion(appointment.id, e)}
+                          >
+                            {appointment.completed ? (
+                              <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+                            ) : (
+                              <Text style={styles.completeButtonText}>
+                                {translations.markComplete}
+                              </Text>
+                            )}
+                          </TouchableOpacity>
+                          <Ionicons name="chevron-forward" size={24} color="#CCCCCC" />
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })
+                ) : (
+                  <View style={styles.emptyAppointmentsContainer}>
+                    <Ionicons name="calendar-outline" size={48} color="#CCCCCC" />
+                    <Text style={styles.emptyStateText}>
+                      {isEnglish ? 'No appointments for today' : 'আজকের জন্য কোন অ্যাপয়েন্টমেন্ট নেই'}
+                    </Text>
+                    <TouchableOpacity
+                      style={styles.addAppointmentButton}
+                      onPress={() => router.push('/patient/schedule' as any)}
+                    >
+                      <Text style={styles.addAppointmentButtonText}>
+                        {isEnglish ? 'Add Appointment' : 'অ্যাপয়েন্টমেন্ট যোগ করুন'}
+                      </Text>
                     </TouchableOpacity>
-                    <Ionicons name="chevron-forward" size={24} color="#CCCCCC" />
                   </View>
-                </TouchableOpacity>
+                )}
               </View>
             </View>
 
@@ -393,7 +466,7 @@ export default function DashboardScreen() {
                     })
                   ) : (
                     // Empty state when no patients are found
-                    <View style={styles.emptyStateContainer}>
+                    <View style={styles.recentPatientsEmptyContainer}>
                       <Ionicons name="people-outline" size={48} color="#CCCCCC" />
                       <Text style={styles.emptyStateText}>
                         {isEnglish ? 'No patients added yet' : 'এখনও কোন রোগী যোগ করা হয়নি'}
@@ -826,7 +899,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     height: 150,
   },
-  emptyStateContainer: {
+  loadingText: {
+    fontSize: 16,
+    color: '#666666',
+    marginTop: 12,
+  },
+  recentPatientsEmptyContainer: {
     width: '100%',
     height: 150,
     backgroundColor: '#F5F7FA',
@@ -835,6 +913,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     marginHorizontal: 20,
+  },
+  emptyAppointmentsContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 30,
+    backgroundColor: '#F5F7FA',
+    borderRadius: 16,
   },
   emptyStateText: {
     fontSize: 16,
@@ -853,5 +938,45 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 14,
+  },
+  addAppointmentButton: {
+    backgroundColor: '#4A90E2',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+  },
+  addAppointmentButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  completedAppointmentCard: {
+    backgroundColor: '#F5F7FA',
+    borderColor: '#34C759',
+    borderWidth: 1,
+  },
+  completedText: {
+    color: '#888888',
+    textDecorationLine: 'line-through',
+  },
+  checkboxContainer: {
+    backgroundColor: '#F0F7FF',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: '#34C759',
+    minWidth: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxContainerChecked: {
+    backgroundColor: '#34C759',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+    marginRight: 10,
   },
 });

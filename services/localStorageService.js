@@ -149,6 +149,7 @@ export const addAppointment = async (appointmentData) => {
     const newAppointment = {
       id: generateId(),
       ...appointmentData,
+      completed: false, // Default to not completed
       created_at: new Date().toISOString(),
     };
 
@@ -184,10 +185,16 @@ export const getAppointmentsByDate = async (date) => {
     const appointmentsJson = await AsyncStorage.getItem(APPOINTMENTS_STORAGE_KEY);
     const appointments = appointmentsJson ? JSON.parse(appointmentsJson) : [];
 
+    console.log('LocalStorage - All appointments:', appointments.length);
+    console.log('LocalStorage - Looking for date:', date);
+    console.log('LocalStorage - All appointment dates:', appointments.map(a => a.date));
+
     // Filter appointments by date
     const filteredAppointments = appointments.filter(appointment =>
       appointment.date === date
     );
+
+    console.log('LocalStorage - Filtered appointments:', filteredAppointments.length);
 
     return { success: true, appointments: filteredAppointments };
   } catch (error) {
@@ -210,6 +217,40 @@ export const deleteAppointment = async (appointmentId) => {
     return { success: true };
   } catch (error) {
     console.error('Error deleting appointment:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Toggle appointment completion status
+export const toggleAppointmentCompletion = async (appointmentId) => {
+  try {
+    const appointmentsJson = await AsyncStorage.getItem(APPOINTMENTS_STORAGE_KEY);
+    const appointments = appointmentsJson ? JSON.parse(appointmentsJson) : [];
+
+    // Find the appointment and toggle its completion status
+    const updatedAppointments = appointments.map(appointment => {
+      if (appointment.id === appointmentId) {
+        return {
+          ...appointment,
+          completed: !appointment.completed
+        };
+      }
+      return appointment;
+    });
+
+    // Save the updated appointments array
+    await AsyncStorage.setItem(APPOINTMENTS_STORAGE_KEY, JSON.stringify(updatedAppointments));
+
+    // Find the updated appointment to return
+    const updatedAppointment = updatedAppointments.find(a => a.id === appointmentId);
+
+    return {
+      success: true,
+      appointment: updatedAppointment,
+      completed: updatedAppointment ? updatedAppointment.completed : false
+    };
+  } catch (error) {
+    console.error('Error toggling appointment completion:', error);
     return { success: false, error: error.message };
   }
 };

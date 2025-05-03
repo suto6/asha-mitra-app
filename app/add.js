@@ -1014,7 +1014,45 @@ export default function AddScreen() {
       console.log('Save result:', result);
 
       if (result.success) {
-        // Show success message
+        // Reset form based on active tab
+        if (activeTab === 'pregnant') {
+          setPregnantData({
+            name: '',
+            age: '',
+            phone: '',
+            lmpDate: '',
+            weight: '',
+            height: '',
+            bloodPressure: '',
+            isHighRisk: false,
+            notes: '',
+          });
+        } else if (activeTab === 'postnatal') {
+          setPostnatalData({
+            motherName: '',
+            age: '',
+            phone: '',
+            deliveryDate: '',
+            deliveryType: 'normal',
+            babyWeight: '',
+            motherWeight: '',
+            bloodPressure: '',
+            notes: '',
+          });
+        } else if (activeTab === 'child') {
+          setChildData({
+            name: '',
+            motherName: '',
+            dateOfBirth: '',
+            gender: '',
+            weight: '',
+            height: '',
+            immunizationStatus: '',
+            notes: '',
+          });
+        }
+
+        // Show success message and navigate to patient list
         Alert.alert(
           isEnglish ? 'Success' : 'সফল',
           isEnglish ? 'Data saved successfully!' : 'তথ্য সফলভাবে সংরক্ষণ করা হয়েছে!',
@@ -1022,46 +1060,8 @@ export default function AddScreen() {
             {
               text: isEnglish ? 'OK' : 'ঠিক আছে',
               onPress: () => {
-                // Reset form based on active tab
-                if (activeTab === 'pregnant') {
-                  setPregnantData({
-                    name: '',
-                    age: '',
-                    phone: '',
-                    lmpDate: '',
-                    weight: '',
-                    height: '',
-                    bloodPressure: '',
-                    isHighRisk: false,
-                    notes: '',
-                  });
-                } else if (activeTab === 'postnatal') {
-                  setPostnatalData({
-                    motherName: '',
-                    age: '',
-                    phone: '',
-                    deliveryDate: '',
-                    deliveryType: 'normal',
-                    babyWeight: '',
-                    motherWeight: '',
-                    bloodPressure: '',
-                    notes: '',
-                  });
-                } else if (activeTab === 'child') {
-                  setChildData({
-                    name: '',
-                    motherName: '',
-                    dateOfBirth: '',
-                    gender: '',
-                    weight: '',
-                    height: '',
-                    immunizationStatus: '',
-                    notes: '',
-                  });
-                }
-
-                // Navigate to dashboard
-                router.replace('/(tabs)/dashboard');
+                // Navigate to patient list instead of dashboard
+                router.replace('/patient/list');
               }
             }
           ]

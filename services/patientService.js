@@ -257,3 +257,23 @@ export const deleteAppointment = async (appointmentId) => {
     return { success: false, error: error.message };
   }
 };
+
+// Function to toggle appointment completion status
+export const toggleAppointmentCompletion = async (appointmentId) => {
+  try {
+    const result = await localStorageService.toggleAppointmentCompletion(appointmentId);
+
+    if (!result.success) {
+      throw new Error(result.error);
+    }
+
+    return {
+      success: true,
+      appointment: result.appointment,
+      completed: result.completed
+    };
+  } catch (error) {
+    console.error('Toggle appointment completion error:', error);
+    return { success: false, error: error.message };
+  }
+};

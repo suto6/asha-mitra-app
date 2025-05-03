@@ -21,7 +21,7 @@ import BengaliTextInput from '@/components/BengaliTextInput';
 import VoiceSearchButton from '@/components/VoiceSearchButton';
 import LanguageToggle from '@/components/LanguageToggle';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { searchPatientsByName, addAppointment, getAppointmentsByDate } from '@/services/patientService';
+import { searchPatientsByName, addAppointment, getAppointmentsByDate, toggleAppointmentCompletion } from '@/services/patientService';
 import { startVoiceRecognition, parseVoiceInput } from '@/utils/voiceRecognition';
 
 export default function ScheduleScreen() {
@@ -61,6 +61,9 @@ export default function ScheduleScreen() {
       const day = String(today.getDate()).padStart(2, '0');
       const formattedToday = `${year}-${month}-${day}`;
 
+      console.log('Schedule - Today\'s date (formatted):', formattedToday);
+      console.log('Schedule - Selected date:', selectedDate);
+
       if (!selectedDate) {
         setSelectedDate(formattedToday);
       }
@@ -69,6 +72,8 @@ export default function ScheduleScreen() {
       const result = await getAppointmentsByDate(selectedDate || formattedToday);
 
       if (result.success) {
+        console.log('Schedule - Appointments found:', result.appointments.length);
+        console.log('Schedule - Appointment dates:', result.appointments.map(a => a.date));
         setAppointments(result.appointments);
 
         // Create marked dates for the calendar
@@ -342,6 +347,33 @@ export default function ScheduleScreen() {
     });
   };
 
+  // Function to toggle appointment completion status
+  const handleToggleCompletion = async (appointmentId, event) => {
+    // Prevent the parent TouchableOpacity from being triggered
+    event.stopPropagation();
+
+    try {
+      const result = await toggleAppointmentCompletion(appointmentId);
+
+      if (result.success) {
+        // Refresh the appointments list
+        fetchAppointments();
+      } else {
+        console.error('Failed to toggle appointment completion:', result.error);
+        Alert.alert(
+          isEnglish ? 'Error' : 'ত্রুটি',
+          isEnglish ? 'Failed to update appointment status' : 'অ্যাপয়েন্টমেন্টের অবস্থা আপডেট করতে ব্যর্থ হয়েছে'
+        );
+      }
+    } catch (error) {
+      console.error('Error toggling appointment completion:', error);
+      Alert.alert(
+        isEnglish ? 'Error' : 'ত্রুটি',
+        isEnglish ? 'An error occurred' : 'একটি ত্রুটি ঘটেছে'
+      );
+    }
+  };
+
   const getAppointmentTypeIcon = (type) => {
     switch (type) {
       case 'anc':
@@ -374,7 +406,7 @@ export default function ScheduleScreen() {
 
   const renderAppointmentItem = ({ item }) => (
     <TouchableOpacity
-      style={styles.appointmentCard}
+      style={[styles.appointmentCard, item.completed && styles.completedAppointmentCard]}
       onPress={() => handleSelectAppointment(item.patientId)}
       activeOpacity={0.7}
     >
@@ -382,10 +414,23 @@ export default function ScheduleScreen() {
         <Ionicons name={getAppointmentTypeIcon(item.appointmentType)} size={24} color="#FFFFFF" />
       </View>
       <View style={styles.appointmentContent}>
-        <Text style={styles.appointmentTime}>{item.time}</Text>
-        <Text style={styles.patientName}>{item.patientName}</Text>
-        <Text style={styles.appointmentNotes}>{item.notes}</Text>
+        <Text style={[styles.appointmentTime, item.completed && styles.completedText]}>{item.time}</Text>
+        <Text style={[styles.patientName, item.completed && styles.completedText]}>{item.patientName}</Text>
+        <Text style={[styles.appointmentNotes, item.completed && styles.completedText]}>{item.notes}</Text>
       </View>
+      <TouchableOpacity
+        style={styles.completionCheckbox}
+        onPress={(e) => handleToggleCompletion(item.id, e)}
+      >
+        <View style={[
+          styles.checkbox,
+          item.completed && styles.checkboxChecked
+        ]}>
+          {item.completed && (
+            <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+          )}
+        </View>
+      </TouchableOpacity>
       <Ionicons name="chevron-forward" size={24} color="#CCCCCC" />
     </TouchableOpacity>
   );
@@ -966,6 +1011,30 @@ const styles = StyleSheet.create({
   appointmentNotes: {
     fontSize: 14,
     color: '#666666',
+  },
+  completedAppointmentCard: {
+    backgroundColor: '#F5F7FA',
+    borderColor: '#34C759',
+    borderWidth: 1,
+  },
+  completedText: {
+    color: '#888888',
+    textDecorationLine: 'line-through',
+  },
+  completionCheckbox: {
+    marginRight: 8,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#34C759',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: '#34C759',
   },
 
   // Modal Styles
