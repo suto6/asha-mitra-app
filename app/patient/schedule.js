@@ -18,9 +18,11 @@ import { Calendar } from 'react-native-calendars';
 import BengaliText from '@/constants/BengaliText';
 import BengaliButton from '@/components/BengaliButton';
 import BengaliTextInput from '@/components/BengaliTextInput';
+import VoiceSearchButton from '@/components/VoiceSearchButton';
 import LanguageToggle from '@/components/LanguageToggle';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { searchPatientsByName, addAppointment, getAppointmentsByDate } from '@/services/patientService';
+import { startVoiceRecognition, parseVoiceInput } from '@/utils/voiceRecognition';
 
 export default function ScheduleScreen() {
   const { isEnglish } = useLanguage();
@@ -41,6 +43,8 @@ export default function ScheduleScreen() {
     notes: '',
   });
   const [saving, setSaving] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     fetchAppointments();
@@ -167,6 +171,83 @@ export default function ScheduleScreen() {
     } finally {
       setSearching(false);
     }
+  };
+
+  // Function to handle starting voice search
+  const handleStartVoiceSearch = async () => {
+    setIsRecording(true);
+
+    try {
+      // Start voice recognition without voice output
+      const recognition = await startVoiceRecognition(
+        (result) => {
+          // Handle successful voice recognition
+          console.log('Voice recognition result:', result);
+          setIsRecording(false);
+          setIsProcessing(true);
+
+          // Parse the voice input
+          const parsedInput = parseVoiceInput(result);
+          console.log('Parsed voice input:', parsedInput);
+
+          if (parsedInput && parsedInput.value) {
+            setSearchQuery(parsedInput.value);
+
+            // Process the result
+            setTimeout(async () => {
+              setIsProcessing(false);
+
+              // Perform search with the recognized name
+              setSearching(true);
+              try {
+                const searchResult = await searchPatientsByName(parsedInput.value);
+
+                if (searchResult.success) {
+                  setSearchResults(searchResult.patients);
+                } else {
+                  console.error('Failed to search patients:', searchResult.error);
+                  setSearchResults([]);
+                }
+              } catch (error) {
+                console.error('Error searching patients:', error);
+                setSearchResults([]);
+              } finally {
+                setSearching(false);
+              }
+            }, 500);
+          } else {
+            setIsProcessing(false);
+            Alert.alert(
+              isEnglish ? 'Error' : 'ত্রুটি',
+              isEnglish ? 'Could not understand the patient name. Please try again.' : 'রোগীর নাম বুঝতে পারেনি। অনুগ্রহ করে আবার চেষ্টা করুন।',
+              [{ text: isEnglish ? 'OK' : 'ঠিক আছে' }]
+            );
+          }
+        },
+        (error) => {
+          // Handle error
+          console.error('Voice recognition error:', error);
+          setIsRecording(false);
+          setIsProcessing(false);
+
+          // Show error message
+          Alert.alert(
+            isEnglish ? 'Error' : 'ত্রুটি',
+            isEnglish ? 'Failed to recognize speech. Please try again.' : 'কথা চিনতে ব্যর্থ হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।',
+            [{ text: isEnglish ? 'OK' : 'ঠিক আছে' }]
+          );
+        }
+      );
+    } catch (error) {
+      console.error('Failed to start voice recognition:', error);
+      setIsRecording(false);
+      setIsProcessing(false);
+    }
+  };
+
+  // Function to handle stopping voice search
+  const handleStopVoiceSearch = async () => {
+    setIsRecording(false);
   };
 
   // Function to select a patient for the appointment
@@ -311,23 +392,27 @@ export default function ScheduleScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        {/* Header with Back Button and Language Toggle */}
-        <View style={styles.headerContainer}>
-          <View style={styles.header}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => router.back()}
-            >
-              <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-            </TouchableOpacity>
-            <Text style={styles.title}>
-              {isEnglish ? 'Schedule Calendar' : BengaliText.SCHEDULE_CALENDAR}
-            </Text>
-            <LanguageToggle style={styles.languageToggle} />
-          </View>
+      {/* Header with Back Button and Language Toggle */}
+      <View style={styles.headerContainer}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+          <Text style={styles.title}>
+            {isEnglish ? 'Schedule Calendar' : BengaliText.SCHEDULE_CALENDAR}
+          </Text>
+          <LanguageToggle style={styles.languageToggle} />
         </View>
+      </View>
 
+      <ScrollView
+        style={styles.scrollContainer}
+        contentContainerStyle={styles.scrollContentContainer}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Calendar */}
         <View style={styles.calendarContainer}>
           <Calendar
@@ -470,7 +555,7 @@ export default function ScheduleScreen() {
                 <Text style={styles.modalTitle}>
                   {isEnglish ? 'Add Appointment' : 'অ্যাপয়েন্টমেন্ট যোগ করুন'}
                 </Text>
-                <View style={styles.placeholderView} />
+                <LanguageToggle style={styles.modalLanguageToggle} />
               </View>
 
               <ScrollView style={styles.modalScrollContent}>
@@ -504,7 +589,7 @@ export default function ScheduleScreen() {
                         <TouchableOpacity
                           style={styles.searchButton}
                           onPress={handleSearchPatient}
-                          disabled={searching}
+                          disabled={searching || isRecording || isProcessing}
                         >
                           {searching ? (
                             <ActivityIndicator size="small" color="#FFFFFF" />
@@ -512,6 +597,13 @@ export default function ScheduleScreen() {
                             <Ionicons name="search" size={20} color="#FFFFFF" />
                           )}
                         </TouchableOpacity>
+                        <VoiceSearchButton
+                          onStartRecording={handleStartVoiceSearch}
+                          onStopRecording={handleStopVoiceSearch}
+                          isRecording={isRecording}
+                          isProcessing={isProcessing}
+                          style={styles.voiceButton}
+                        />
                       </View>
 
                       {searchResults.length > 0 ? (
@@ -536,9 +628,22 @@ export default function ScheduleScreen() {
                           />
                         </View>
                       ) : searchQuery && !searching ? (
-                        <Text style={styles.noResultsText}>
-                          {isEnglish ? 'No patients found' : 'কোন রোগী পাওয়া যায়নি'}
-                        </Text>
+                        <View style={styles.noResultsContainer}>
+                          <Text style={styles.noResultsText}>
+                            {isEnglish ? 'No patients found' : 'কোন রোগী পাওয়া যায়নি'}
+                          </Text>
+                          <BengaliButton
+                            title={isEnglish ? 'Add New Patient' : 'নতুন রোগী যোগ করুন'}
+                            onPress={() => {
+                              setModalVisible(false);
+                              router.push({
+                                pathname: '/add',
+                                params: { name: searchQuery }
+                              });
+                            }}
+                            style={styles.addNewPatientButton}
+                          />
+                        </View>
                       ) : null}
                     </>
                   )}
@@ -662,7 +767,7 @@ export default function ScheduleScreen() {
             </View>
           </SafeAreaView>
         </Modal>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -672,8 +777,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F5F7FA',
   },
-  content: {
+  scrollContainer: {
     flex: 1,
+  },
+  scrollContentContainer: {
+    paddingBottom: 30,
   },
   // Header Styles
   headerContainer: {
@@ -716,6 +824,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 8,
   },
+  modalLanguageToggle: {
+    backgroundColor: '#F5F7FA',
+    borderRadius: 20,
+    padding: 8,
+  },
 
   // Calendar Styles
   calendarContainer: {
@@ -754,8 +867,8 @@ const styles = StyleSheet.create({
 
   // Appointments Styles
   appointmentsContainer: {
-    flex: 1,
     paddingHorizontal: 20,
+    minHeight: 300,
   },
   appointmentsHeader: {
     flexDirection: 'row',
@@ -796,10 +909,10 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   emptyContainer: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 40,
+    minHeight: 200,
   },
   emptyText: {
     fontSize: 18,
@@ -950,6 +1063,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#4A90E2',
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 8,
+  },
+  voiceButton: {
+    width: 44,
+    height: 44,
   },
   searchResultsContainer: {
     backgroundColor: '#F5F7FA',
@@ -976,11 +1094,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666666',
   },
+  noResultsContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   noResultsText: {
     fontSize: 14,
     color: '#888888',
     textAlign: 'center',
     marginBottom: 16,
+  },
+  addNewPatientButton: {
+    backgroundColor: '#4A90E2',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    minWidth: 150,
   },
   selectedPatientContainer: {
     flexDirection: 'row',

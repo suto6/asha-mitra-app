@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 
 import BengaliText from '@/constants/BengaliText';
 import BottomNavBar from '@/components/BottomNavBar';
@@ -13,11 +13,21 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { addPatient } from '@/services/patientService';
 
 export default function AddScreen() {
+  const params = useLocalSearchParams();
   const [activeTab, setActiveTab] = useState('pregnant');
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [saving, setSaving] = useState(false);
   const { isEnglish } = useLanguage();
+
+  // Pre-fill name from URL params if available
+  useEffect(() => {
+    if (params.name) {
+      setPregnantData(prev => ({ ...prev, name: params.name }));
+      setPostnatalData(prev => ({ ...prev, motherName: params.name }));
+      setChildData(prev => ({ ...prev, name: params.name }));
+    }
+  }, [params.name]);
 
   // Text translations
   const translations = {
