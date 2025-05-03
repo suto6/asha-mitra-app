@@ -37,47 +37,13 @@ export default function PatientListScreen() {
         setPatients(mappedPatients);
       } else {
         console.log('No patients found or error fetching patients:', result.error);
-        // Set fallback data if fetch fails or no patients found
-        setPatients([
-          {
-            id: '1',
-            name: 'পিঙ্কি বিশ্বাস',
-            age: '25',
-            type: 'pregnant',
-            lastVisit: '২০২৩-০৫-১০',
-            lmpDate: '২০২৩-০৪-০১',
-          },
-          {
-            id: '2',
-            name: 'সুমিতা রায়',
-            age: '22',
-            type: 'pregnant',
-            lastVisit: '২০২৩-০৫-০৮',
-            lmpDate: '২০২৩-০৩-১৫',
-          },
-        ]);
+        // Set empty array if no patients found
+        setPatients([]);
       }
     } catch (error) {
       console.error('Error fetching patients:', error);
-      // Set fallback data if fetch fails
-      setPatients([
-        {
-          id: '1',
-          name: 'পিঙ্কি বিশ্বাস',
-          age: '25',
-          type: 'pregnant',
-          lastVisit: '২০২৩-০৫-১০',
-          lmpDate: '২০২৩-০৪-০১',
-        },
-        {
-          id: '2',
-          name: 'সুমিতা রায়',
-          age: '22',
-          type: 'pregnant',
-          lastVisit: '২০২৩-০৫-০৮',
-          lmpDate: '২০২৩-০৩-১৫',
-        },
-      ]);
+      // Set empty array if fetch fails
+      setPatients([]);
     } finally {
       setLoading(false);
     }

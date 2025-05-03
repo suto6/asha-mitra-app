@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -8,7 +8,9 @@ import BengaliButton from '@/components/BengaliButton';
 import BengaliTextInput from '@/components/BengaliTextInput';
 import VoiceInputButton from '@/components/VoiceInputButton';
 import AlertBox from '@/components/AlertBox';
+import LanguageToggle from '@/components/LanguageToggle';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { startVoiceRecognition, parsePatientData, speakBengali } from '@/utils/voiceRecognition';
 import { analyzeHealthData, processHealthAlerts } from '@/utils/healthAnalysis';
 import { getPatientDetails, addHealthRecord } from '@/services/patientService';
@@ -16,6 +18,7 @@ import { getPatientDetails, addHealthRecord } from '@/services/patientService';
 export default function AddHealthRecordScreen() {
   const { patientId } = useLocalSearchParams();
   const { currentUser } = useAuth();
+  const { isEnglish } = useLanguage();
   const [patient, setPatient] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -29,99 +32,149 @@ export default function AddHealthRecordScreen() {
   const [healthAlerts, setHealthAlerts] = useState([]);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
+  // Fetch patient details
   useEffect(() => {
-    // In a real implementation, we would fetch patient details
-    // For demo purposes, we're using simulated data
+    const fetchPatientData = async () => {
+      setLoading(true);
+      setError(null);
 
-    // Simulate API call
-    setTimeout(() => {
-      // Simulated patient data
-      const simulatedPatient = {
-        id: patientId,
-        name: 'পিঙ্কি বিশ্বাস',
-        age: '25',
-      };
+      try {
+        console.log('Fetching patient details for ID:', patientId);
+        const result = await getPatientDetails(patientId);
 
-      setPatient(simulatedPatient);
-      setLoading(false);
-    }, 1000);
-  }, [patientId]);
+        if (result.success && result.patient) {
+          console.log('Patient details fetched successfully:', result.patient);
+          setPatient(result.patient);
+        } else {
+          console.error('Failed to fetch patient details:', result.error);
+          setError(isEnglish ? 'Failed to load patient data' : 'রোগীর তথ্য লোড করতে ব্যর্থ');
+        }
+      } catch (err) {
+        console.error('Error fetching patient data:', err);
+        setError(isEnglish ? 'An error occurred while loading data' : 'তথ্য লোড করার সময় একটি ত্রুটি ঘটেছে');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPatientData();
+  }, [patientId, isEnglish]);
 
   // Function to handle starting voice recording
   const handleStartRecording = async () => {
     setIsRecording(true);
 
-    // In a real implementation, we would start actual voice recognition here
-    // For demo purposes, we're simulating voice recognition
+    try {
+      // Speak prompt in the appropriate language
+      await speakBengali(isEnglish ? "Please speak now" : BengaliText.SPEAK_NOW);
 
-    // Simulate voice recognition with Bengali text
-    speakBengali(BengaliText.SPEAK_NOW);
+      // Start actual voice recognition
+      const recognition = await startVoiceRecognition(
+        (result) => {
+          // Handle successful voice recognition
+          console.log('Voice recognition result:', result);
+          setIsRecording(false);
+          setIsProcessing(true);
+
+          // Parse the voice input
+          const parsedData = parsePatientData(result);
+          console.log('Parsed voice input:', parsedData);
+
+          // Update health data with parsed values
+          setHealthData({
+            lmpDate: parsedData.lmpDate || healthData.lmpDate,
+            weight: parsedData.weight || healthData.weight,
+            height: parsedData.height || healthData.height,
+            bloodPressure: parsedData.bloodPressure || healthData.bloodPressure,
+            notes: parsedData.notes || healthData.notes,
+          });
+
+          // Process the result
+          setTimeout(() => {
+            setIsProcessing(false);
+
+            // Analyze health data for potential risks
+            const alerts = analyzeHealthData(parsedData);
+            setHealthAlerts(alerts);
+
+            // Process alerts (speak warnings)
+            if (alerts && alerts.length > 0) {
+              processHealthAlerts(alerts);
+            }
+          }, 500);
+        },
+        (error) => {
+          // Handle error
+          console.error('Voice recognition error:', error);
+          setIsRecording(false);
+          setIsProcessing(false);
+
+          // Show error message
+          Alert.alert(
+            isEnglish ? 'Error' : 'ত্রুটি',
+            isEnglish ? 'Failed to recognize speech. Please try again.' : 'কথা চিনতে ব্যর্থ হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।',
+            [{ text: isEnglish ? 'OK' : 'ঠিক আছে' }]
+          );
+        }
+      );
+    } catch (error) {
+      console.error('Failed to start voice recognition:', error);
+      setIsRecording(false);
+    }
   };
 
   // Function to handle stopping voice recording
   const handleStopRecording = async () => {
     setIsRecording(false);
-    setIsProcessing(true);
-
-    // Simulate processing delay
-    setTimeout(() => {
-      // Simulate voice recognition result
-      const simulatedVoiceInput =
-        "শেষ মাসিকের তারিখ ২০২৩-০৪-০১, " +
-        "ওজন ৫৫ কেজি, উচ্চতা ৫ ফুট ২ ইঞ্চি, ব্লাড প্রেসার ১৪০/৯০, বিশেষ কোনো সমস্যা নেই।";
-
-      // Parse the voice input
-      const parsedData = {
-        lmpDate: '২০২৩-০৪-০১',
-        weight: '৫৫',
-        height: '৫ ফুট ২ ইঞ্চি',
-        bloodPressure: '১৪০/৯০',
-        notes: 'বিশেষ কোনো সমস্যা নেই।',
-      };
-
-      setHealthData(parsedData);
-      setIsProcessing(false);
-
-      // Analyze health data for potential risks
-      const alerts = analyzeHealthData(parsedData);
-      setHealthAlerts(alerts);
-
-      // Process alerts (speak warnings)
-      if (alerts && alerts.length > 0) {
-        processHealthAlerts(alerts);
-      }
-    }, 2000);
   };
 
   // Function to save health record
   const handleSaveRecord = async () => {
     if (!healthData.lmpDate && !healthData.weight && !healthData.bloodPressure) {
-      Alert.alert(BengaliText.ERROR, 'অন্তত একটি স্বাস্থ্য তথ্য দিন');
+      Alert.alert(
+        isEnglish ? 'Error' : BengaliText.ERROR,
+        isEnglish ? 'Please provide at least one health data field' : 'অন্তত একটি স্বাস্থ্য তথ্য দিন'
+      );
       return;
     }
 
     setSaving(true);
 
     try {
-      // In a real implementation, we would save to the database
-      // For demo purposes, we're simulating API call
+      // Save the health record to the database
+      const result = await addHealthRecord(patientId, {
+        lmpDate: healthData.lmpDate,
+        weight: healthData.weight,
+        height: healthData.height,
+        bloodPressure: healthData.bloodPressure,
+        notes: healthData.notes
+      });
 
-      setTimeout(() => {
-        Alert.alert(BengaliText.DATA_SAVED, '', [
-          {
-            text: BengaliText.CONFIRM,
-            onPress: () => {
-              // Navigate back to patient details
-              router.back();
+      if (result.success) {
+        Alert.alert(
+          isEnglish ? 'Success' : BengaliText.DATA_SAVED,
+          isEnglish ? 'Health record saved successfully' : 'স্বাস্থ্য রেকর্ড সফলভাবে সংরক্ষিত হয়েছে',
+          [
+            {
+              text: isEnglish ? 'OK' : BengaliText.CONFIRM,
+              onPress: () => {
+                // Navigate back to patient details
+                router.back();
+              }
             }
-          }
-        ]);
-        setSaving(false);
-      }, 1000);
-
+          ]
+        );
+      } else {
+        throw new Error(result.error);
+      }
     } catch (error) {
-      Alert.alert(BengaliText.ERROR, error.message);
+      Alert.alert(
+        isEnglish ? 'Error' : BengaliText.ERROR,
+        isEnglish ? `Failed to save record: ${error.message}` : `রেকর্ড সংরক্ষণ করতে ব্যর্থ: ${error.message}`
+      );
+    } finally {
       setSaving(false);
     }
   };
@@ -136,7 +189,24 @@ export default function AddHealthRecordScreen() {
   if (loading) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>লোড হচ্ছে...</Text>
+        <ActivityIndicator size="large" color="#4A90E2" />
+        <Text style={styles.loadingText}>
+          {isEnglish ? 'Loading...' : 'লোড হচ্ছে...'}
+        </Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.errorContainer}>
+        <Ionicons name="alert-circle-outline" size={64} color="#FF3B30" />
+        <Text style={styles.errorText}>{error}</Text>
+        <BengaliButton
+          title={isEnglish ? 'Go Back' : 'ফিরে যান'}
+          onPress={() => router.back()}
+          style={styles.backButtonLarge}
+        />
       </SafeAreaView>
     );
   }
@@ -144,7 +214,7 @@ export default function AddHealthRecordScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header with back button */}
+        {/* Header with back button and language toggle */}
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButton}
@@ -152,22 +222,24 @@ export default function AddHealthRecordScreen() {
           >
             <Ionicons name="arrow-back" size={24} color="#4A90E2" />
           </TouchableOpacity>
-          <Text style={styles.title}>নতুন স্বাস্থ্য রেকর্ড</Text>
-          <View style={styles.placeholder} />
+          <Text style={styles.title}>
+            {isEnglish ? 'New Health Record' : 'নতুন স্বাস্থ্য রেকর্ড'}
+          </Text>
+          <LanguageToggle style={styles.languageToggle} />
         </View>
 
         {/* Patient Info */}
         <View style={styles.patientInfoContainer}>
           <Text style={styles.patientName}>{patient?.name}</Text>
           <Text style={styles.patientDetails}>
-            {BengaliText.AGE}: {patient?.age}
+            {isEnglish ? 'Age' : BengaliText.AGE}: {patient?.age}
           </Text>
         </View>
 
         {/* Voice Input Button */}
         <View style={styles.voiceInputContainer}>
           <Text style={styles.voiceInputLabel}>
-            স্বাস্থ্য তথ্য ভয়েস দিয়ে দিন
+            {isEnglish ? 'Provide health information using voice' : 'স্বাস্থ্য তথ্য ভয়েস দিয়ে দিন'}
           </Text>
           <VoiceInputButton
             onStartRecording={handleStartRecording}
@@ -186,52 +258,52 @@ export default function AddHealthRecordScreen() {
         {/* Health Record Form */}
         <View style={styles.formContainer}>
           <BengaliTextInput
-            label={BengaliText.LMP_DATE}
+            label={isEnglish ? "LMP Date" : BengaliText.LMP_DATE}
             value={healthData.lmpDate}
             onChangeText={(text) => setHealthData({...healthData, lmpDate: text})}
-            placeholder={BengaliText.LMP_DATE}
+            placeholder={isEnglish ? "Enter LMP date" : BengaliText.LMP_DATE}
           />
 
           <BengaliTextInput
-            label={BengaliText.WEIGHT}
+            label={isEnglish ? "Weight" : BengaliText.WEIGHT}
             value={healthData.weight}
             onChangeText={(text) => setHealthData({...healthData, weight: text})}
-            placeholder={BengaliText.WEIGHT}
+            placeholder={isEnglish ? "Enter weight" : BengaliText.WEIGHT}
             keyboardType="numeric"
           />
 
           <BengaliTextInput
-            label={BengaliText.HEIGHT}
+            label={isEnglish ? "Height" : BengaliText.HEIGHT}
             value={healthData.height}
             onChangeText={(text) => setHealthData({...healthData, height: text})}
-            placeholder={BengaliText.HEIGHT}
+            placeholder={isEnglish ? "Enter height" : BengaliText.HEIGHT}
           />
 
           <BengaliTextInput
-            label={BengaliText.BLOOD_PRESSURE}
+            label={isEnglish ? "Blood Pressure" : BengaliText.BLOOD_PRESSURE}
             value={healthData.bloodPressure}
             onChangeText={(text) => setHealthData({...healthData, bloodPressure: text})}
-            placeholder={BengaliText.BLOOD_PRESSURE}
+            placeholder={isEnglish ? "Enter blood pressure" : BengaliText.BLOOD_PRESSURE}
           />
 
           <BengaliTextInput
-            label={BengaliText.NOTES}
+            label={isEnglish ? "Notes" : BengaliText.NOTES}
             value={healthData.notes}
             onChangeText={(text) => setHealthData({...healthData, notes: text})}
-            placeholder={BengaliText.NOTES}
+            placeholder={isEnglish ? "Enter notes" : BengaliText.NOTES}
             multiline={true}
             numberOfLines={4}
           />
 
           <View style={styles.buttonContainer}>
             <BengaliButton
-              title={BengaliText.SAVE}
+              title={isEnglish ? "Save" : BengaliText.SAVE}
               onPress={handleSaveRecord}
               loading={saving}
             />
 
             <BengaliButton
-              title={BengaliText.CANCEL}
+              title={isEnglish ? "Cancel" : BengaliText.CANCEL}
               onPress={() => router.back()}
               primary={false}
               disabled={saving}
@@ -257,6 +329,25 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 18,
     color: '#666666',
+    marginTop: 12,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5F7FA',
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 18,
+    color: '#666666',
+    textAlign: 'center',
+    marginTop: 12,
+    marginBottom: 24,
+  },
+  backButtonLarge: {
+    backgroundColor: '#4A90E2',
+    marginTop: 12,
   },
   scrollContent: {
     padding: 20,
@@ -278,6 +369,9 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     width: 40,
+  },
+  languageToggle: {
+    padding: 8,
   },
   patientInfoContainer: {
     backgroundColor: '#FFFFFF',

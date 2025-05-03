@@ -104,43 +104,13 @@ export default function DashboardScreen() {
         setRecentPatients(patients);
       } else {
         console.error('Failed to fetch recent patients or no patients found:', result.error);
-        // Set fallback data if fetch fails or no patients found
-        setRecentPatients([
-          {
-            id: '1',
-            name: 'পিঙ্কি বিশ্বাস',
-            age: '25',
-            lastVisit: '২০২৩-০৫-১০',
-            lmpDate: '২০২৩-০৪-০১',
-          },
-          {
-            id: '2',
-            name: 'সুমিতা রায়',
-            age: '22',
-            lastVisit: '২০২৩-০৫-০৮',
-            lmpDate: '২০২৩-০৩-১৫',
-          },
-        ]);
+        // Set empty array if no patients found
+        setRecentPatients([]);
       }
     } catch (error) {
       console.error('Error fetching recent patients:', error);
-      // Set fallback data if fetch fails
-      setRecentPatients([
-        {
-          id: '1',
-          name: 'পিঙ্কি বিশ্বাস',
-          age: '25',
-          lastVisit: '২০২৩-০৫-১০',
-          lmpDate: '২০২৩-০৪-০১',
-        },
-        {
-          id: '2',
-          name: 'সুমিতা রায়',
-          age: '22',
-          lastVisit: '২০২৩-০৫-০৮',
-          lmpDate: '২০২৩-০৩-১৫',
-        },
-      ]);
+      // Set empty array if fetch fails
+      setRecentPatients([]);
     } finally {
       setLoading(false);
     }
@@ -422,24 +392,21 @@ export default function DashboardScreen() {
                       );
                     })
                   ) : (
-                    // Fallback if no patients are found
-                    <>
-                      <TouchableOpacity style={[styles.recentPatientCard, styles.recentPatientCard1]} activeOpacity={0.7}>
-                        <View style={[styles.patientTypeTag, { backgroundColor: '#4A90E2' }]}>
-                          <Text style={styles.patientTypeText}>{translations.pregnant}</Text>
-                        </View>
-                        <Text style={styles.recentPatientName}>পিঙ্কি বিশ্বাস</Text>
-                        <Text style={styles.recentPatientDate}>{translations.today}</Text>
+                    // Empty state when no patients are found
+                    <View style={styles.emptyStateContainer}>
+                      <Ionicons name="people-outline" size={48} color="#CCCCCC" />
+                      <Text style={styles.emptyStateText}>
+                        {isEnglish ? 'No patients added yet' : 'এখনও কোন রোগী যোগ করা হয়নি'}
+                      </Text>
+                      <TouchableOpacity
+                        style={styles.addPatientButton}
+                        onPress={() => router.push('/add' as any)}
+                      >
+                        <Text style={styles.addPatientButtonText}>
+                          {isEnglish ? 'Add Patient' : 'রোগী যোগ করুন'}
+                        </Text>
                       </TouchableOpacity>
-
-                      <TouchableOpacity style={[styles.recentPatientCard, styles.recentPatientCard2]} activeOpacity={0.7}>
-                        <View style={[styles.patientTypeTag, { backgroundColor: '#FF9500' }]}>
-                          <Text style={styles.patientTypeText}>{translations.newborn}</Text>
-                        </View>
-                        <Text style={styles.recentPatientName}>অনিতা দাস</Text>
-                        <Text style={styles.recentPatientDate}>{translations.today}</Text>
-                      </TouchableOpacity>
-                    </>
+                    </View>
                   )}
                 </ScrollView>
               )}
@@ -858,5 +825,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     height: 150,
+  },
+  emptyStateContainer: {
+    width: '100%',
+    height: 150,
+    backgroundColor: '#F5F7FA',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    marginHorizontal: 20,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: '#666666',
+    marginTop: 12,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  addPatientButton: {
+    backgroundColor: '#4A90E2',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+  },
+  addPatientButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
 });

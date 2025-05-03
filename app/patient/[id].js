@@ -1,58 +1,77 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { useLocalSearchParams, router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import BengaliText from '@/constants/BengaliText';
 import BengaliButton from '@/components/BengaliButton';
+import LanguageToggle from '@/components/LanguageToggle';
 import { getPatientDetails, getPatientHealthRecords } from '@/services/patientService';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function PatientDetailsScreen() {
   const { id } = useLocalSearchParams();
   const [patient, setPatient] = useState(null);
   const [healthRecords, setHealthRecords] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { isEnglish } = useLanguage();
 
-  useEffect(() => {
-    // In a real implementation, we would fetch patient details and health records
-    // For demo purposes, we're using simulated data
+  // Function to fetch patient data
+  const fetchPatientData = async () => {
+    setLoading(true);
+    setError(null);
 
-    // Simulate API call
-    setTimeout(() => {
-      // Simulated patient data
-      const simulatedPatient = {
-        id: id,
-        name: 'পিঙ্কি বিশ্বাস',
-        age: '25',
-      };
+    try {
+      console.log('Fetching patient details for ID:', id);
 
-      // Simulated health records
-      const simulatedRecords = [
-        {
-          id: '1',
-          lmp_date: '২০২৩-০৪-০১',
-          weight_kg: '৫৫',
-          height_cm: '১৫৭',
-          blood_pressure: '১২০/৮০',
-          notes: 'বিশেষ কোনো সমস্যা নেই।',
-          timestamp: new Date('2023-05-10').toISOString(),
-        },
-        {
-          id: '2',
-          lmp_date: '২০২৩-০৩-০১',
-          weight_kg: '৫৪',
-          height_cm: '১৫৭',
-          blood_pressure: '১১৮/৭৮',
-          notes: 'সামান্য বমি বমি ভাব।',
-          timestamp: new Date('2023-04-05').toISOString(),
-        },
-      ];
+      // Fetch patient details
+      const patientResult = await getPatientDetails(id);
 
-      setPatient(simulatedPatient);
-      setHealthRecords(simulatedRecords);
+      if (patientResult.success && patientResult.patient) {
+        console.log('Patient details fetched successfully:', patientResult.patient);
+        setPatient(patientResult.patient);
+
+        // Fetch health records
+        const recordsResult = await getPatientHealthRecords(id);
+
+        if (recordsResult.success) {
+          console.log('Health records fetched successfully:', recordsResult.records);
+          setHealthRecords(recordsResult.records);
+        } else {
+          console.error('Failed to fetch health records:', recordsResult.error);
+          setHealthRecords([]);
+        }
+      } else {
+        console.error('Failed to fetch patient details:', patientResult.error);
+        setError(isEnglish ? 'Failed to load patient data' : 'রোগীর তথ্য লোড করতে ব্যর্থ');
+
+        // Set empty data if fetch fails
+        setPatient(null);
+        setHealthRecords([]);
+      }
+    } catch (err) {
+      console.error('Error fetching patient data:', err);
+      setError(isEnglish ? 'An error occurred while loading data' : 'তথ্য লোড করার সময় একটি ত্রুটি ঘটেছে');
+
+      // Set empty data if fetch fails
+      setPatient(null);
+      setHealthRecords([]);
+    } finally {
       setLoading(false);
-    }, 1000);
-  }, [id]);
+    }
+  };
+
+  // Use useFocusEffect to refresh data when the screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('Patient details screen focused, refreshing data...');
+      fetchPatientData();
+
+      // No cleanup needed for this effect
+      return () => {};
+    }, [id])
+  );
 
   // Function to format date
   const formatDate = (dateString) => {
@@ -77,7 +96,30 @@ export default function PatientDetailsScreen() {
   if (loading) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>লোড হচ্ছে...</Text>
+        <ActivityIndicator size="large" color="#4A90E2" />
+        <Text style={styles.loadingText}>
+          {isEnglish ? 'Loading...' : 'লোড হচ্ছে...'}
+        </Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.errorContainer}>
+        <Ionicons name="alert-circle-outline" size={64} color="#FF3B30" />
+        <Text style={styles.errorText}>{error}</Text>
+        <BengaliButton
+          title={isEnglish ? 'Try Again' : 'আবার চেষ্টা করুন'}
+          onPress={fetchPatientData}
+          style={styles.retryButton}
+        />
+        <BengaliButton
+          title={isEnglish ? 'Go Back' : 'ফিরে যান'}
+          onPress={() => router.back()}
+          style={styles.backButtonLarge}
+          textStyle={styles.backButtonText}
+        />
       </SafeAreaView>
     );
   }
@@ -85,7 +127,7 @@ export default function PatientDetailsScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header with back button */}
+        {/* Header with back button and language toggle */}
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButton}
@@ -93,8 +135,10 @@ export default function PatientDetailsScreen() {
           >
             <Ionicons name="arrow-back" size={24} color="#4A90E2" />
           </TouchableOpacity>
-          <Text style={styles.title}>{BengaliText.PATIENT_HISTORY}</Text>
-          <View style={styles.placeholder} />
+          <Text style={styles.title}>
+            {isEnglish ? 'Patient History' : BengaliText.PATIENT_HISTORY}
+          </Text>
+          <LanguageToggle style={styles.languageToggle} />
         </View>
 
         {/* Patient Info Card */}
@@ -105,21 +149,23 @@ export default function PatientDetailsScreen() {
           <View style={styles.patientInfo}>
             <Text style={styles.patientName}>{patient?.name}</Text>
             <Text style={styles.patientDetails}>
-              {BengaliText.AGE}: {patient?.age}
+              {isEnglish ? 'Age' : BengaliText.AGE}: {patient?.age}
             </Text>
           </View>
         </View>
 
         {/* Add Health Record Button */}
         <BengaliButton
-          title="নতুন স্বাস্থ্য রেকর্ড যোগ করুন"
+          title={isEnglish ? "Add New Health Record" : "নতুন স্বাস্থ্য রেকর্ড যোগ করুন"}
           onPress={handleAddHealthRecord}
           style={styles.addRecordButton}
         />
 
         {/* Health Records */}
         <View style={styles.recordsContainer}>
-          <Text style={styles.sectionTitle}>স্বাস্থ্য রেকর্ড</Text>
+          <Text style={styles.sectionTitle}>
+            {isEnglish ? "Health Records" : "স্বাস্থ্য রেকর্ড"}
+          </Text>
 
           {healthRecords.length > 0 ? (
             healthRecords.map((record) => (
@@ -132,28 +178,42 @@ export default function PatientDetailsScreen() {
 
                 <View style={styles.recordDetails}>
                   <View style={styles.recordItem}>
-                    <Text style={styles.recordLabel}>{BengaliText.LMP_DATE}</Text>
+                    <Text style={styles.recordLabel}>
+                      {isEnglish ? "LMP Date" : BengaliText.LMP_DATE}
+                    </Text>
                     <Text style={styles.recordValue}>{record.lmp_date}</Text>
                   </View>
 
                   <View style={styles.recordItem}>
-                    <Text style={styles.recordLabel}>{BengaliText.WEIGHT}</Text>
-                    <Text style={styles.recordValue}>{record.weight_kg} কেজি</Text>
+                    <Text style={styles.recordLabel}>
+                      {isEnglish ? "Weight" : BengaliText.WEIGHT}
+                    </Text>
+                    <Text style={styles.recordValue}>
+                      {record.weight_kg} {isEnglish ? "kg" : "কেজি"}
+                    </Text>
                   </View>
 
                   <View style={styles.recordItem}>
-                    <Text style={styles.recordLabel}>{BengaliText.HEIGHT}</Text>
-                    <Text style={styles.recordValue}>{record.height_cm} সেমি</Text>
+                    <Text style={styles.recordLabel}>
+                      {isEnglish ? "Height" : BengaliText.HEIGHT}
+                    </Text>
+                    <Text style={styles.recordValue}>
+                      {record.height_cm} {isEnglish ? "cm" : "সেমি"}
+                    </Text>
                   </View>
 
                   <View style={styles.recordItem}>
-                    <Text style={styles.recordLabel}>{BengaliText.BLOOD_PRESSURE}</Text>
+                    <Text style={styles.recordLabel}>
+                      {isEnglish ? "Blood Pressure" : BengaliText.BLOOD_PRESSURE}
+                    </Text>
                     <Text style={styles.recordValue}>{record.blood_pressure}</Text>
                   </View>
 
                   {record.notes ? (
                     <View style={styles.recordNotes}>
-                      <Text style={styles.recordLabel}>{BengaliText.NOTES}</Text>
+                      <Text style={styles.recordLabel}>
+                        {isEnglish ? "Notes" : BengaliText.NOTES}
+                      </Text>
                       <Text style={styles.recordValue}>{record.notes}</Text>
                     </View>
                   ) : null}
@@ -161,7 +221,9 @@ export default function PatientDetailsScreen() {
               </View>
             ))
           ) : (
-            <Text style={styles.emptyText}>কোন স্বাস্থ্য রেকর্ড নেই</Text>
+            <Text style={styles.emptyText}>
+              {isEnglish ? "No health records found" : "কোন স্বাস্থ্য রেকর্ড নেই"}
+            </Text>
           )}
         </View>
       </ScrollView>
@@ -183,6 +245,33 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 18,
     color: '#666666',
+    marginTop: 12,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5F7FA',
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 18,
+    color: '#666666',
+    textAlign: 'center',
+    marginTop: 12,
+    marginBottom: 24,
+  },
+  retryButton: {
+    marginBottom: 12,
+    backgroundColor: '#4A90E2',
+  },
+  backButtonLarge: {
+    backgroundColor: '#F5F7FA',
+    borderWidth: 1,
+    borderColor: '#4A90E2',
+  },
+  backButtonText: {
+    color: '#4A90E2',
   },
   scrollContent: {
     padding: 20,
@@ -204,6 +293,9 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     width: 40,
+  },
+  languageToggle: {
+    padding: 8,
   },
   patientCard: {
     flexDirection: 'row',

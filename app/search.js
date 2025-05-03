@@ -71,47 +71,13 @@ export default function SearchScreen() {
         setRecentPatients(patients);
       } else {
         console.log('No patients found or error fetching patients:', result.error);
-        // Set fallback data if fetch fails or no patients found
-        setRecentPatients([
-          {
-            id: '1',
-            name: 'পিঙ্কি বিশ্বাস',
-            age: '25',
-            type: 'pregnant',
-            lastVisit: '২০২৩-০৫-১০',
-            lmpDate: '২০২৩-০৪-০১',
-          },
-          {
-            id: '2',
-            name: 'সুমিতা রায়',
-            age: '22',
-            type: 'pregnant',
-            lastVisit: '২০২৩-০৫-০৮',
-            lmpDate: '২০২৩-০৩-১৫',
-          },
-        ]);
+        // Set empty array if no patients found
+        setRecentPatients([]);
       }
     } catch (error) {
       console.error('Error fetching recent patients:', error);
-      // Set fallback data if fetch fails
-      setRecentPatients([
-        {
-          id: '1',
-          name: 'পিঙ্কি বিশ্বাস',
-          age: '25',
-          type: 'pregnant',
-          lastVisit: '২০২৩-০৫-১০',
-          lmpDate: '২০২৩-০৪-০১',
-        },
-        {
-          id: '2',
-          name: 'সুমিতা রায়',
-          age: '22',
-          type: 'pregnant',
-          lastVisit: '২০২৩-০৫-০৮',
-          lmpDate: '২০২৩-০৩-১৫',
-        },
-      ]);
+      // Set empty array if fetch fails
+      setRecentPatients([]);
     } finally {
       setSearching(false);
     }
