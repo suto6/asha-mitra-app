@@ -9,7 +9,7 @@ import BengaliTextInput from '@/components/BengaliTextInput';
 import VoiceInputButton from '@/components/VoiceInputButton';
 import PatientCard from '@/components/PatientCard';
 import { startVoiceRecognition, speakBengali } from '@/utils/voiceRecognition';
-import { searchPatientsByName } from '@/services/firebaseService';
+import { searchPatientsByName } from '@/services/patientService';
 
 export default function SearchPatientScreen() {
   const [searchQuery, setSearchQuery] = useState('');

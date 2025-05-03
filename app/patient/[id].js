@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import BengaliText from '@/constants/BengaliText';
 import BengaliButton from '@/components/BengaliButton';
-import { getPatientDetails, getPatientHealthRecords } from '@/services/firebaseService';
+import { getPatientDetails, getPatientHealthRecords } from '@/services/patientService';
 
 export default function PatientDetailsScreen() {
   const { id } = useLocalSearchParams();
@@ -16,7 +16,7 @@ export default function PatientDetailsScreen() {
   useEffect(() => {
     // In a real implementation, we would fetch patient details and health records
     // For demo purposes, we're using simulated data
-    
+
     // Simulate API call
     setTimeout(() => {
       // Simulated patient data
@@ -25,7 +25,7 @@ export default function PatientDetailsScreen() {
         name: 'পিঙ্কি বিশ্বাস',
         age: '25',
       };
-      
+
       // Simulated health records
       const simulatedRecords = [
         {
@@ -47,7 +47,7 @@ export default function PatientDetailsScreen() {
           timestamp: new Date('2023-04-05').toISOString(),
         },
       ];
-      
+
       setPatient(simulatedPatient);
       setHealthRecords(simulatedRecords);
       setLoading(false);
@@ -57,7 +57,7 @@ export default function PatientDetailsScreen() {
   // Function to format date
   const formatDate = (dateString) => {
     if (!dateString) return '';
-    
+
     try {
       const date = new Date(dateString);
       return date.toLocaleDateString('bn-IN');
@@ -87,7 +87,7 @@ export default function PatientDetailsScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Header with back button */}
         <View style={styles.header}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.backButton}
             onPress={() => router.back()}
           >
@@ -120,7 +120,7 @@ export default function PatientDetailsScreen() {
         {/* Health Records */}
         <View style={styles.recordsContainer}>
           <Text style={styles.sectionTitle}>স্বাস্থ্য রেকর্ড</Text>
-          
+
           {healthRecords.length > 0 ? (
             healthRecords.map((record) => (
               <View key={record.id} style={styles.recordCard}>
@@ -129,28 +129,28 @@ export default function PatientDetailsScreen() {
                     {formatDate(record.timestamp)}
                   </Text>
                 </View>
-                
+
                 <View style={styles.recordDetails}>
                   <View style={styles.recordItem}>
                     <Text style={styles.recordLabel}>{BengaliText.LMP_DATE}</Text>
                     <Text style={styles.recordValue}>{record.lmp_date}</Text>
                   </View>
-                  
+
                   <View style={styles.recordItem}>
                     <Text style={styles.recordLabel}>{BengaliText.WEIGHT}</Text>
                     <Text style={styles.recordValue}>{record.weight_kg} কেজি</Text>
                   </View>
-                  
+
                   <View style={styles.recordItem}>
                     <Text style={styles.recordLabel}>{BengaliText.HEIGHT}</Text>
                     <Text style={styles.recordValue}>{record.height_cm} সেমি</Text>
                   </View>
-                  
+
                   <View style={styles.recordItem}>
                     <Text style={styles.recordLabel}>{BengaliText.BLOOD_PRESSURE}</Text>
                     <Text style={styles.recordValue}>{record.blood_pressure}</Text>
                   </View>
-                  
+
                   {record.notes ? (
                     <View style={styles.recordNotes}>
                       <Text style={styles.recordLabel}>{BengaliText.NOTES}</Text>

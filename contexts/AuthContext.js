@@ -1,5 +1,10 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { safeAsyncStorage } from '../lib/asyncStorage';
+
+// Use the appropriate storage based on platform
+const storage = Platform.OS === 'web' ? safeAsyncStorage : AsyncStorage;
 
 // Create the authentication context
 const AuthContext = createContext();
@@ -17,8 +22,8 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkLoginStatus = async () => {
       try {
-        const loginStatus = await AsyncStorage.getItem('isLoggedIn');
-        const storedProfile = await AsyncStorage.getItem('userProfile');
+        const loginStatus = await storage.getItem('isLoggedIn');
+        const storedProfile = await storage.getItem('userProfile');
 
         if (loginStatus === 'true') {
           setIsAuthenticated(true);
@@ -32,7 +37,7 @@ export const AuthProvider = ({ children }) => {
               district: 'West Bengal'
             };
             setUserProfile(demoProfile);
-            await AsyncStorage.setItem('userProfile', JSON.stringify(demoProfile));
+            await storage.setItem('userProfile', JSON.stringify(demoProfile));
           }
         }
 
@@ -57,9 +62,9 @@ export const AuthProvider = ({ children }) => {
         district: 'West Bengal'
       };
 
-      // Save login status and profile to AsyncStorage
-      await AsyncStorage.setItem('isLoggedIn', 'true');
-      await AsyncStorage.setItem('userProfile', JSON.stringify(demoProfile));
+      // Save login status and profile to storage
+      await storage.setItem('isLoggedIn', 'true');
+      await storage.setItem('userProfile', JSON.stringify(demoProfile));
 
       setUserProfile(demoProfile);
       setIsAuthenticated(true);
@@ -74,9 +79,9 @@ export const AuthProvider = ({ children }) => {
   // Logout function
   const logout = async () => {
     try {
-      // Clear login status and profile from AsyncStorage
-      await AsyncStorage.removeItem('isLoggedIn');
-      await AsyncStorage.removeItem('userProfile');
+      // Clear login status and profile from storage
+      await storage.removeItem('isLoggedIn');
+      await storage.removeItem('userProfile');
 
       setUserProfile(null);
       setIsAuthenticated(false);

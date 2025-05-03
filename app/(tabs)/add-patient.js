@@ -12,7 +12,7 @@ import AlertBox from '@/components/AlertBox';
 import { useAuth } from '@/contexts/AuthContext';
 import { startVoiceRecognition, parsePatientData, speakBengali } from '@/utils/voiceRecognition';
 import { analyzeHealthData, processHealthAlerts } from '@/utils/healthAnalysis';
-import { addPatient } from '@/services/firebaseService';
+import { addPatient } from '@/services/patientService';
 
 export default function AddPatientScreen() {
   const { currentUser } = useAuth();

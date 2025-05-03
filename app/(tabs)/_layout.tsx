@@ -35,7 +35,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="dashboard"
         options={{
-          title: BengaliText.HOME,
+          // title: BengaliText.DASHBOARD,
           tabBarIcon: ({ color }: { color: string }) => <Ionicons name="home" size={28} color={color} />,
         }}
       />

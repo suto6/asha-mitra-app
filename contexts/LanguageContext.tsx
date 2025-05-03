@@ -1,5 +1,10 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { safeAsyncStorage } from '../lib/asyncStorage';
+
+// Use the appropriate storage based on platform
+const storage = Platform.OS === 'web' ? safeAsyncStorage : AsyncStorage;
 
 type Language = 'bn' | 'en';
 
@@ -23,7 +28,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     // Load saved language preference
     const loadLanguage = async () => {
       try {
-        const savedLanguage = await AsyncStorage.getItem('language');
+        const savedLanguage = await storage.getItem('language');
         if (savedLanguage === 'en' || savedLanguage === 'bn') {
           setLanguage(savedLanguage);
         }
@@ -38,10 +43,10 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
   const toggleLanguage = async () => {
     const newLanguage: Language = language === 'bn' ? 'en' : 'bn';
     setLanguage(newLanguage);
-    
+
     // Save language preference
     try {
-      await AsyncStorage.setItem('language', newLanguage);
+      await storage.setItem('language', newLanguage);
     } catch (error) {
       console.error('Failed to save language preference:', error);
     }

@@ -11,7 +11,7 @@ import AlertBox from '@/components/AlertBox';
 import { useAuth } from '@/contexts/AuthContext';
 import { startVoiceRecognition, parsePatientData, speakBengali } from '@/utils/voiceRecognition';
 import { analyzeHealthData, processHealthAlerts } from '@/utils/healthAnalysis';
-import { getPatientDetails, addHealthRecord } from '@/services/firebaseService';
+import { getPatientDetails, addHealthRecord } from '@/services/patientService';
 
 export default function AddHealthRecordScreen() {
   const { patientId } = useLocalSearchParams();
@@ -33,7 +33,7 @@ export default function AddHealthRecordScreen() {
   useEffect(() => {
     // In a real implementation, we would fetch patient details
     // For demo purposes, we're using simulated data
-    
+
     // Simulate API call
     setTimeout(() => {
       // Simulated patient data
@@ -42,7 +42,7 @@ export default function AddHealthRecordScreen() {
         name: 'পিঙ্কি বিশ্বাস',
         age: '25',
       };
-      
+
       setPatient(simulatedPatient);
       setLoading(false);
     }, 1000);
@@ -51,10 +51,10 @@ export default function AddHealthRecordScreen() {
   // Function to handle starting voice recording
   const handleStartRecording = async () => {
     setIsRecording(true);
-    
+
     // In a real implementation, we would start actual voice recognition here
     // For demo purposes, we're simulating voice recognition
-    
+
     // Simulate voice recognition with Bengali text
     speakBengali(BengaliText.SPEAK_NOW);
   };
@@ -63,14 +63,14 @@ export default function AddHealthRecordScreen() {
   const handleStopRecording = async () => {
     setIsRecording(false);
     setIsProcessing(true);
-    
+
     // Simulate processing delay
     setTimeout(() => {
       // Simulate voice recognition result
-      const simulatedVoiceInput = 
+      const simulatedVoiceInput =
         "শেষ মাসিকের তারিখ ২০২৩-০৪-০১, " +
         "ওজন ৫৫ কেজি, উচ্চতা ৫ ফুট ২ ইঞ্চি, ব্লাড প্রেসার ১৪০/৯০, বিশেষ কোনো সমস্যা নেই।";
-      
+
       // Parse the voice input
       const parsedData = {
         lmpDate: '২০২৩-০৪-০১',
@@ -79,14 +79,14 @@ export default function AddHealthRecordScreen() {
         bloodPressure: '১৪০/৯০',
         notes: 'বিশেষ কোনো সমস্যা নেই।',
       };
-      
+
       setHealthData(parsedData);
       setIsProcessing(false);
-      
+
       // Analyze health data for potential risks
       const alerts = analyzeHealthData(parsedData);
       setHealthAlerts(alerts);
-      
+
       // Process alerts (speak warnings)
       if (alerts && alerts.length > 0) {
         processHealthAlerts(alerts);
@@ -100,17 +100,17 @@ export default function AddHealthRecordScreen() {
       Alert.alert(BengaliText.ERROR, 'অন্তত একটি স্বাস্থ্য তথ্য দিন');
       return;
     }
-    
+
     setSaving(true);
-    
+
     try {
       // In a real implementation, we would save to the database
       // For demo purposes, we're simulating API call
-      
+
       setTimeout(() => {
         Alert.alert(BengaliText.DATA_SAVED, '', [
-          { 
-            text: BengaliText.CONFIRM, 
+          {
+            text: BengaliText.CONFIRM,
             onPress: () => {
               // Navigate back to patient details
               router.back();
@@ -119,7 +119,7 @@ export default function AddHealthRecordScreen() {
         ]);
         setSaving(false);
       }, 1000);
-      
+
     } catch (error) {
       Alert.alert(BengaliText.ERROR, error.message);
       setSaving(false);
@@ -146,7 +146,7 @@ export default function AddHealthRecordScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Header with back button */}
         <View style={styles.header}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.backButton}
             onPress={() => router.back()}
           >
@@ -178,9 +178,9 @@ export default function AddHealthRecordScreen() {
         </View>
 
         {/* Health Alerts */}
-        <AlertBox 
-          alerts={healthAlerts} 
-          onDismiss={handleDismissAlert} 
+        <AlertBox
+          alerts={healthAlerts}
+          onDismiss={handleDismissAlert}
         />
 
         {/* Health Record Form */}
@@ -191,7 +191,7 @@ export default function AddHealthRecordScreen() {
             onChangeText={(text) => setHealthData({...healthData, lmpDate: text})}
             placeholder={BengaliText.LMP_DATE}
           />
-          
+
           <BengaliTextInput
             label={BengaliText.WEIGHT}
             value={healthData.weight}
@@ -199,21 +199,21 @@ export default function AddHealthRecordScreen() {
             placeholder={BengaliText.WEIGHT}
             keyboardType="numeric"
           />
-          
+
           <BengaliTextInput
             label={BengaliText.HEIGHT}
             value={healthData.height}
             onChangeText={(text) => setHealthData({...healthData, height: text})}
             placeholder={BengaliText.HEIGHT}
           />
-          
+
           <BengaliTextInput
             label={BengaliText.BLOOD_PRESSURE}
             value={healthData.bloodPressure}
             onChangeText={(text) => setHealthData({...healthData, bloodPressure: text})}
             placeholder={BengaliText.BLOOD_PRESSURE}
           />
-          
+
           <BengaliTextInput
             label={BengaliText.NOTES}
             value={healthData.notes}
@@ -222,14 +222,14 @@ export default function AddHealthRecordScreen() {
             multiline={true}
             numberOfLines={4}
           />
-          
+
           <View style={styles.buttonContainer}>
             <BengaliButton
               title={BengaliText.SAVE}
               onPress={handleSaveRecord}
               loading={saving}
             />
-            
+
             <BengaliButton
               title={BengaliText.CANCEL}
               onPress={() => router.back()}

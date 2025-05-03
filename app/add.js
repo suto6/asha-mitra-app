@@ -98,50 +98,309 @@ export default function AddScreen() {
     notes: '',
   });
 
-  const handleStartRecording = () => {
+  const handleStartRecording = async () => {
     setIsRecording(true);
-    // In a real app, this would start voice recognition
-    setTimeout(() => {
-      setIsRecording(false);
-      setIsProcessing(true);
 
-      // Simulate processing
+    // Start actual voice recognition
+    console.log('Started listening for voice input...');
+
+    // Initialize speech recognition directly when starting
+    if (typeof window !== 'undefined' && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      try {
+        // Create a global recognition instance so we can stop it later
+        window.recognitionInstance = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        const recognition = window.recognitionInstance;
+
+        // Configure speech recognition
+        recognition.lang = 'bn-BD'; // Bengali language
+        recognition.continuous = false;
+        recognition.interimResults = true;
+
+        // Handle results
+        recognition.onresult = (event) => {
+          const transcript = event.results[0][0].transcript;
+          console.log('Voice input received:', transcript);
+
+          // Show the transcript in real-time
+          if (activeTab === 'pregnant') {
+            setPregnantData(prev => ({ ...prev, notes: transcript }));
+          } else if (activeTab === 'postnatal') {
+            setPostnatalData(prev => ({ ...prev, notes: transcript }));
+          } else if (activeTab === 'child') {
+            setChildData(prev => ({ ...prev, notes: transcript }));
+          }
+        };
+
+        // Handle errors
+        recognition.onerror = (event) => {
+          console.error('Speech recognition error:', event.error);
+          setIsRecording(false);
+          alert('ভয়েস ইনপুট প্রক্রিয়াকরণে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+        };
+
+        // Start recognition
+        recognition.start();
+        console.log('Speech recognition started');
+      } catch (error) {
+        console.error('Failed to start speech recognition:', error);
+        setIsRecording(false);
+        alert('ভয়েস ইনপুট শুরু করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+
+        // Fallback for testing - simulate recording
+        alert('ফলব্যাক মোডে চলছে। আপনার ভয়েস ইনপুট সিমুলেট করা হচ্ছে।');
+      }
+    } else {
+      // Fallback for browsers that don't support speech recognition
+      console.log('Speech recognition not supported in this browser');
+      alert('আপনার ব্রাউজারে ভয়েস ইনপুট সমর্থিত নয়। ফলব্যাক মোডে চলছে।');
+
+      // For testing purposes, we'll use a timeout to simulate recording
       setTimeout(() => {
-        setIsProcessing(false);
-
-        // Populate form based on active tab
-        if (activeTab === 'pregnant') {
-          setPregnantData({
-            ...pregnantData,
-            name: 'পিঙ্কি বিশ্বাস',
-            age: '25',
-            phone: '9876543210',
-            lmpDate: '২০২৩-০৪-০১',
-          });
-        } else if (activeTab === 'postnatal') {
-          setPostnatalData({
-            ...postnatalData,
-            motherName: 'সুমিতা রায়',
-            age: '22',
-            phone: '9876543211',
-            deliveryDate: '২০২৩-০৫-১০',
-          });
-        } else if (activeTab === 'child') {
-          setChildData({
-            ...childData,
-            name: 'অনিতা দাস',
-            motherName: 'রিতা দাস',
-            dateOfBirth: '২০২৩-০৫-০১',
-            gender: 'মেয়ে',
-          });
+        if (isRecording) {
+          handleStopRecording();
         }
-      }, 2000);
-    }, 2000);
+      }, 5000);
+    }
   };
 
   const handleStopRecording = () => {
+    // Stop recording
     setIsRecording(false);
-    // In a real app, this would stop voice recognition
+
+    // Start processing
+    setIsProcessing(true);
+
+    // Get the transcript from the current state
+    let transcript = '';
+
+    if (activeTab === 'pregnant') {
+      transcript = pregnantData.notes || '';
+    } else if (activeTab === 'postnatal') {
+      transcript = postnatalData.notes || '';
+    } else if (activeTab === 'child') {
+      transcript = childData.notes || '';
+    }
+
+    // Stop the recognition if it's running
+    if (typeof window !== 'undefined' && window.recognitionInstance) {
+      try {
+        window.recognitionInstance.stop();
+        console.log('Speech recognition stopped');
+      } catch (error) {
+        console.error('Error stopping speech recognition:', error);
+      }
+    }
+
+    // If we have a transcript, process it
+    if (transcript) {
+      console.log('Processing transcript:', transcript);
+      processVoiceInput(transcript);
+    } else {
+      // If no transcript was captured, use fallback data for testing
+      console.log('No transcript captured, using fallback data');
+
+      // Use fallback data based on active tab
+      if (activeTab === 'pregnant') {
+        const fallbackData = {
+          ...pregnantData,
+          name: 'পিঙ্কি বিশ্বাস',
+          age: '25',
+          phone: '9876543210',
+          lmpDate: '২০২৩-০৪-০১',
+          weight: '55',
+          height: '152',
+          bloodPressure: '120/80',
+          notes: 'ফলব্যাক ডাটা - ভয়েস ইনপুট কাজ করছে না',
+        };
+
+        // Calculate EDD based on LMP
+        fallbackData.eddDate = calculateEDD(fallbackData.lmpDate);
+
+        // Update state with fallback data
+        setPregnantData(fallbackData);
+        setIsProcessing(false);
+        alert('ফলব্যাক ডাটা ব্যবহার করা হয়েছে। আসল ভয়েস ইনপুট কাজ করছে না।');
+      }
+      else if (activeTab === 'postnatal') {
+        const fallbackData = {
+          ...postnatalData,
+          motherName: 'সুমিতা রায়',
+          age: '22',
+          phone: '9876543211',
+          deliveryDate: '২০২৩-০৫-১০',
+          deliveryType: 'normal',
+          babyWeight: '3.2',
+          motherWeight: '58',
+          bloodPressure: '110/70',
+          notes: 'ফলব্যাক ডাটা - ভয়েস ইনপুট কাজ করছে না',
+        };
+
+        // Update state with fallback data
+        setPostnatalData(fallbackData);
+        setIsProcessing(false);
+        alert('ফলব্যাক ডাটা ব্যবহার করা হয়েছে। আসল ভয়েস ইনপুট কাজ করছে না।');
+      }
+      else if (activeTab === 'child') {
+        const fallbackData = {
+          ...childData,
+          name: 'অনিতা দাস',
+          motherName: 'রিতা দাস',
+          dateOfBirth: '২০২৩-০৫-০১',
+          gender: 'মেয়ে',
+          weight: '12.5',
+          height: '85',
+          immunizationStatus: 'সম্পূর্ণ',
+          notes: 'ফলব্যাক ডাটা - ভয়েস ইনপুট কাজ করছে না',
+        };
+
+        // Update state with fallback data
+        setChildData(fallbackData);
+        setIsProcessing(false);
+        alert('ফলব্যাক ডাটা ব্যবহার করা হয়েছে। আসল ভয়েস ইনপুট কাজ করছে না।');
+      }
+    }
+  };
+
+  // Function to process voice input
+  const processVoiceInput = (transcript) => {
+    console.log('Processing voice input:', transcript);
+
+    // Extract relevant information from the transcript
+    // This would be more sophisticated in a real implementation
+
+    // Process immediately without delay
+    if (activeTab === 'pregnant') {
+      // Extract data from transcript
+      // This is a simplified example - in a real app, you would use NLP
+      const nameMatch = transcript.match(/নাম\s+([^\s,।]+(?:\s+[^\s,।]+)*)/i);
+      const ageMatch = transcript.match(/বয়স\s+(\d+)/i);
+      const phoneMatch = transcript.match(/ফোন\s+(\d+)/i);
+      const lmpMatch = transcript.match(/শেষ\s+মাসিক\s+([^\s,।]+(?:\s+[^\s,।]+)*)/i);
+      const weightMatch = transcript.match(/ওজন\s+(\d+)/i);
+      const heightMatch = transcript.match(/উচ্চতা\s+(\d+)/i);
+      const bpMatch = transcript.match(/রক্তচাপ\s+([^\s,।]+)/i);
+
+      // Create a new data object with the current data
+      const updatedData = { ...pregnantData };
+
+      // Always keep the transcript in notes
+      updatedData.notes = transcript;
+
+      // Update specific fields if matches were found
+      if (nameMatch) updatedData.name = nameMatch[1];
+      if (ageMatch) updatedData.age = ageMatch[1];
+      if (phoneMatch) updatedData.phone = phoneMatch[1];
+      if (lmpMatch) updatedData.lmpDate = lmpMatch[1];
+      if (weightMatch) updatedData.weight = weightMatch[1];
+      if (heightMatch) updatedData.height = heightMatch[1];
+      if (bpMatch) updatedData.bloodPressure = bpMatch[1];
+
+      // If no specific matches were found, try to extract information based on position in the transcript
+      if (!nameMatch && !ageMatch && !phoneMatch && !lmpMatch) {
+        // Split the transcript by spaces and try to use words as field values
+        const words = transcript.split(/\s+/);
+        if (words.length > 0 && !updatedData.name && words[0].length > 1) {
+          updatedData.name = words[0];
+        }
+        if (words.length > 1 && !updatedData.age && /^\d+$/.test(words[1])) {
+          updatedData.age = words[1];
+        }
+      }
+
+      // Calculate EDD if LMP is available
+      if (updatedData.lmpDate) {
+        updatedData.eddDate = calculateEDD(updatedData.lmpDate);
+      }
+
+      // Update state with the extracted data
+      setPregnantData(updatedData);
+
+      // Processing complete
+      setIsProcessing(false);
+
+      // Show success feedback
+      alert('ভয়েস ইনপুট সফলভাবে প্রক্রিয়া করা হয়েছে।');
+    }
+    else if (activeTab === 'postnatal') {
+      // Extract data for postnatal
+      const nameMatch = transcript.match(/নাম\s+([^\s,।]+(?:\s+[^\s,।]+)*)/i);
+      const ageMatch = transcript.match(/বয়স\s+(\d+)/i);
+      const phoneMatch = transcript.match(/ফোন\s+(\d+)/i);
+      const dateMatch = transcript.match(/তারিখ\s+([^\s,।]+)/i);
+
+      // Create a new data object with the current data
+      const updatedData = { ...postnatalData };
+
+      // Always keep the transcript in notes
+      updatedData.notes = transcript;
+
+      // Update specific fields if matches were found
+      if (nameMatch) updatedData.motherName = nameMatch[1];
+      if (ageMatch) updatedData.age = ageMatch[1];
+      if (phoneMatch) updatedData.phone = phoneMatch[1];
+      if (dateMatch) updatedData.deliveryDate = dateMatch[1];
+
+      // If no specific matches were found, try to extract information based on position in the transcript
+      if (!nameMatch && !ageMatch && !phoneMatch && !dateMatch) {
+        // Split the transcript by spaces and try to use words as field values
+        const words = transcript.split(/\s+/);
+        if (words.length > 0 && !updatedData.motherName && words[0].length > 1) {
+          updatedData.motherName = words[0];
+        }
+        if (words.length > 1 && !updatedData.age && /^\d+$/.test(words[1])) {
+          updatedData.age = words[1];
+        }
+      }
+
+      // Update state with the extracted data
+      setPostnatalData(updatedData);
+
+      // Processing complete
+      setIsProcessing(false);
+
+      // Show success feedback
+      alert('ভয়েস ইনপুট সফলভাবে প্রক্রিয়া করা হয়েছে।');
+    }
+    else if (activeTab === 'child') {
+      // Extract data for child
+      const nameMatch = transcript.match(/নাম\s+([^\s,।]+(?:\s+[^\s,।]+)*)/i);
+      const motherMatch = transcript.match(/মায়ের\s+নাম\s+([^\s,।]+(?:\s+[^\s,।]+)*)/i);
+      const dobMatch = transcript.match(/জন্ম\s+তারিখ\s+([^\s,।]+)/i);
+      const genderMatch = transcript.match(/লিঙ্গ\s+([^\s,।]+)/i);
+
+      // Create a new data object with the current data
+      const updatedData = { ...childData };
+
+      // Always keep the transcript in notes
+      updatedData.notes = transcript;
+
+      // Update specific fields if matches were found
+      if (nameMatch) updatedData.name = nameMatch[1];
+      if (motherMatch) updatedData.motherName = motherMatch[1];
+      if (dobMatch) updatedData.dateOfBirth = dobMatch[1];
+      if (genderMatch) updatedData.gender = genderMatch[1];
+
+      // If no specific matches were found, try to extract information based on position in the transcript
+      if (!nameMatch && !motherMatch && !dobMatch && !genderMatch) {
+        // Split the transcript by spaces and try to use words as field values
+        const words = transcript.split(/\s+/);
+        if (words.length > 0 && !updatedData.name && words[0].length > 1) {
+          updatedData.name = words[0];
+        }
+        if (words.length > 1 && !updatedData.motherName && words[1].length > 1) {
+          updatedData.motherName = words[1];
+        }
+      }
+
+      // Update state with the extracted data
+      setChildData(updatedData);
+
+      // Processing complete
+      setIsProcessing(false);
+
+      // Show success feedback
+      alert('ভয়েস ইনপুট সফলভাবে প্রক্রিয়া করা হয়েছে।');
+    }
   };
 
   const handleSave = () => {
@@ -198,6 +457,7 @@ export default function AddScreen() {
   const calculateEDD = (lmpDate) => {
     // This is a placeholder for calculating EDD from LMP
     // In a real app, this would use a proper date calculation
+    console.log('Calculating EDD from LMP:', lmpDate);
     return 'Calculated EDD will appear here';
   };
 
