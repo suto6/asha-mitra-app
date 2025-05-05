@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Platform } from 'react-native';
 import { useLocalSearchParams, router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { TouchableNativeFeedback } from 'react-native';
 
 import BengaliText from '@/constants/BengaliText';
 import BengaliButton from '@/components/BengaliButton';
 import LanguageToggle from '@/components/LanguageToggle';
-import { getPatientDetails, getPatientHealthRecords } from '@/services/patientService';
+import { getPatientDetails, getPatientHealthRecords, deletePatient } from '@/services/patientService';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function PatientDetailsScreen() {
@@ -93,6 +94,68 @@ export default function PatientDetailsScreen() {
     });
   };
 
+  // Function to handle patient deletion
+  const handleDeletePatient = () => {
+    // Show confirmation dialog
+    Alert.alert(
+      isEnglish ? 'Delete Patient' : BengaliText.DELETE_PATIENT,
+      isEnglish
+        ? 'Are you sure you want to delete this patient? This action cannot be undone.'
+        : BengaliText.DELETE_CONFIRM,
+      [
+        {
+          text: isEnglish ? 'Cancel' : BengaliText.CANCEL,
+          style: 'cancel'
+        },
+        {
+          text: isEnglish ? 'Delete' : BengaliText.DELETE_PATIENT,
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setLoading(true);
+              const result = await deletePatient(id);
+
+              if (result.success) {
+                // Show success message
+                Alert.alert(
+                  isEnglish ? 'Success' : BengaliText.CONFIRM,
+                  isEnglish ? 'Patient deleted successfully' : BengaliText.DELETE_SUCCESS,
+                  [
+                    {
+                      text: 'OK',
+                      onPress: () => {
+                        // Navigate back to the previous screen
+                        router.back();
+                      }
+                    }
+                  ]
+                );
+              } else {
+                // Show error message
+                Alert.alert(
+                  isEnglish ? 'Error' : BengaliText.ERROR,
+                  isEnglish
+                    ? `Failed to delete patient: ${result.error}`
+                    : `${BengaliText.DELETE_ERROR}: ${result.error}`
+                );
+                setLoading(false);
+              }
+            } catch (error) {
+              console.error('Error deleting patient:', error);
+              Alert.alert(
+                isEnglish ? 'Error' : BengaliText.ERROR,
+                isEnglish
+                  ? 'An error occurred while deleting the patient'
+                  : BengaliText.DELETE_ERROR
+              );
+              setLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
@@ -141,17 +204,47 @@ export default function PatientDetailsScreen() {
           <LanguageToggle style={styles.languageToggle} />
         </View>
 
-        {/* Patient Info Card */}
-        <View style={styles.patientCard}>
-          <View style={styles.patientIconContainer}>
-            <Ionicons name="person" size={32} color="#4A90E2" />
+
+
+        {/* Patient Info Card with Delete Button */}
+        <View style={styles.patientCardContainer}>
+          <View style={styles.patientCard}>
+            <View style={styles.patientIconContainer}>
+              <Ionicons name="person" size={32} color="#4A90E2" />
+            </View>
+            <View style={styles.patientInfo}>
+              <Text style={styles.patientName}>{patient?.name}</Text>
+              <Text style={styles.patientDetails}>
+                {isEnglish ? 'Age' : BengaliText.AGE}: {patient?.age}
+              </Text>
+            </View>
           </View>
-          <View style={styles.patientInfo}>
-            <Text style={styles.patientName}>{patient?.name}</Text>
-            <Text style={styles.patientDetails}>
-              {isEnglish ? 'Age' : BengaliText.AGE}: {patient?.age}
-            </Text>
-          </View>
+
+          {/* Delete Button */}
+          {Platform.OS === 'android' ? (
+            <View style={styles.deleteIconButtonContainer}>
+              <TouchableNativeFeedback
+                onPress={handleDeletePatient}
+                background={TouchableNativeFeedback.Ripple('#FFE5E5', true)}
+                accessibilityLabel={isEnglish ? "Delete Patient" : BengaliText.DELETE_PATIENT}
+                accessibilityHint={isEnglish ? "Deletes this patient record" : "এই রোগীর রেকর্ড মুছে ফেলে"}
+              >
+                <View style={styles.deleteIconButton}>
+                  <Ionicons name="trash-outline" size={22} color="#FF3B30" />
+                </View>
+              </TouchableNativeFeedback>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={[styles.deleteIconButton, styles.deleteIconButtonIOS]}
+              onPress={handleDeletePatient}
+              activeOpacity={0.6}
+              accessibilityLabel={isEnglish ? "Delete Patient" : BengaliText.DELETE_PATIENT}
+              accessibilityHint={isEnglish ? "Deletes this patient record" : "এই রোগীর রেকর্ড মুছে ফেলে"}
+            >
+              <Ionicons name="trash-outline" size={22} color="#FF3B30" />
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Add Health Record Button */}
@@ -302,7 +395,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 20,
-    marginBottom: 20,
+    paddingRight: 50, // Add extra padding on the right for the delete button
+    width: '100%',
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -332,7 +426,41 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666666',
   },
+  patientCardContainer: {
+    position: 'relative',
+    marginBottom: 20,
+  },
+  deleteIconButtonContainer: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    overflow: 'hidden', // Important for TouchableNativeFeedback
+  },
+  deleteIconButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.5,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#FFE5E5',
+  },
+  deleteIconButtonIOS: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+  },
   addRecordButton: {
+    backgroundColor: '#4A90E2',
     marginBottom: 20,
   },
   recordsContainer: {

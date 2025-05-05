@@ -277,3 +277,21 @@ export const toggleAppointmentCompletion = async (appointmentId) => {
     return { success: false, error: error.message };
   }
 };
+
+// Function to delete a patient
+export const deletePatient = async (patientId) => {
+  try {
+    const result = await localStorageService.deletePatient(patientId);
+
+    if (!result.success) {
+      throw new Error(result.error);
+    }
+
+    return {
+      success: true
+    };
+  } catch (error) {
+    console.error('Delete patient error:', error);
+    return { success: false, error: error.message };
+  }
+};
