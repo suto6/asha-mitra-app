@@ -1,50 +1,40 @@
-# Welcome to your Expo app 👋
+# 🌸 Asha Mitra  
+**Empowering India's frontline health workers, ASHA-Workers.**
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## Overview
+Asha Mitra is a **mobile-first web app** designed for **ASHA workers** to digitize daily health records in **Bengali** with voice input, making data entry easy and accessible.
 
-## Get started
+---
 
-1. Install dependencies
+## Key Features
+- **Bengali voice input** for patient management  
+- **Manage appointments** (ANC, checkups, vaccination)  
+- **Register patients** (Child, Pregnant Women, Nabajatak)  
+- **Live Stats Dashboard** for tracking progress  
+- **Search patients** by name, phone, or ID (Bengali recognition)  
+- **Bilingual interface**: English and Bengali  
 
-   ```bash
-   npm install
-   ```
+---
 
-2. Start the app
+## The Problem It Solves
+Asha Mitra addresses common challenges faced by ASHA workers:
+1. Difficulty managing handwritten records  
+2. Time wasted on manual data tracking  
+3. Missed appointments due to lack of reminders  
+4. Language barriers with non-Bengali digital tools  
+5. Understanding trends and patient history
 
-   ```bash
-   npx expo start
-   ```
+With Asha Mitra, everything is:
+- Easier  
+- Faster  
+- Accessible in Bengali  
+- Mobile-optimized  
 
-In the output, you'll find options to open the app in a
+---
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Technologies Used
+- **Frontend**: React-Navive, Expo, Expo Router
+- **Backend**: Supabase  
+- **Voice Recognition**: Expo Speech 
+- **Design & Prototyping**: Figma  
+- **Version Control**: GitHub
