@@ -123,13 +123,40 @@ export const updatePatient = async (patientId, updatedData) => {
 // Delete a patient
 export const deletePatient = async (patientId) => {
   try {
-    const patientsJson = await AsyncStorage.getItem(PATIENTS_STORAGE_KEY);
-    const patients = patientsJson ? JSON.parse(patientsJson) : [];
+    console.log('localStorageService.deletePatient called with ID:', patientId);
 
-    const updatedPatients = patients.filter(p => p.id !== patientId);
+    if (!patientId) {
+      console.error('Invalid patient ID:', patientId);
+      return { success: false, error: 'Invalid patient ID' };
+    }
+
+    // Convert patientId to string to ensure consistent comparison
+    const patientIdStr = String(patientId);
+    console.log('Using patient ID (as string):', patientIdStr);
+
+    const patientsJson = await AsyncStorage.getItem(PATIENTS_STORAGE_KEY);
+    console.log('Retrieved patients from storage');
+
+    const patients = patientsJson ? JSON.parse(patientsJson) : [];
+    console.log('Total patients before deletion:', patients.length);
+    console.log('Patient IDs before deletion:', patients.map(p => p.id));
+
+    // Check if patient exists (comparing as strings)
+    const patientExists = patients.some(p => String(p.id) === patientIdStr);
+    console.log('Patient exists:', patientExists);
+
+    if (!patientExists) {
+      console.error('Patient not found with ID:', patientIdStr);
+      return { success: false, error: 'Patient not found' };
+    }
+
+    // Filter out the patient with the matching ID (comparing as strings)
+    const updatedPatients = patients.filter(p => String(p.id) !== patientIdStr);
+    console.log('Total patients after deletion:', updatedPatients.length);
 
     // Save the updated patients array
     await AsyncStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(updatedPatients));
+    console.log('Updated patients saved to storage');
 
     return { success: true };
   } catch (error) {

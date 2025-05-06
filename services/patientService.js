@@ -281,12 +281,26 @@ export const toggleAppointmentCompletion = async (appointmentId) => {
 // Function to delete a patient
 export const deletePatient = async (patientId) => {
   try {
-    const result = await localStorageService.deletePatient(patientId);
+    console.log('patientService.deletePatient called with ID:', patientId);
+
+    if (!patientId) {
+      console.error('Invalid patient ID:', patientId);
+      return { success: false, error: 'Invalid patient ID' };
+    }
+
+    // Convert patientId to string to ensure consistent handling
+    const patientIdStr = String(patientId);
+    console.log('Using patient ID (as string):', patientIdStr);
+
+    const result = await localStorageService.deletePatient(patientIdStr);
+    console.log('localStorageService.deletePatient result:', result);
 
     if (!result.success) {
+      console.error('localStorageService.deletePatient failed:', result.error);
       throw new Error(result.error);
     }
 
+    console.log('Patient deleted successfully');
     return {
       success: true
     };

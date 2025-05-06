@@ -12,8 +12,8 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ImageBackground 
-        source={require('@/assets/images/health-bg.jpg')} 
+      <ImageBackground
+        source={require('@/assets/images/health-bg.jpg')}
         style={styles.backgroundImage}
         blurRadius={2}
       >
@@ -24,7 +24,7 @@ export default function HomeScreen() {
           <View style={styles.languageToggleContainer}>
             <LanguageToggle />
           </View>
-          
+
           <View style={styles.contentContainer}>
             <View style={styles.logoContainer}>
               <View style={styles.logoCircle}>
@@ -88,7 +88,7 @@ export default function HomeScreen() {
 
             <TouchableOpacity
               style={styles.loginButton}
-              onPress={() => router.push('/(auth)/login')}
+              onPress={() => router.push('/login')}
             >
               <LinearGradient
                 colors={['#4A90E2', '#89CFF0']}

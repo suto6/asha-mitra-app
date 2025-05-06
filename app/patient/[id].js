@@ -96,6 +96,18 @@ export default function PatientDetailsScreen() {
 
   // Function to handle patient deletion
   const handleDeletePatient = () => {
+    console.log('Delete button pressed for patient ID:', id);
+
+    // Ensure we have a valid patient ID
+    if (!id || id === 'undefined' || id === 'null') {
+      console.error('Invalid patient ID:', id);
+      Alert.alert(
+        isEnglish ? 'Error' : BengaliText.ERROR,
+        isEnglish ? 'Invalid patient ID' : 'অবৈধ রোগী আইডি'
+      );
+      return;
+    }
+
     // Show confirmation dialog
     Alert.alert(
       isEnglish ? 'Delete Patient' : BengaliText.DELETE_PATIENT,
@@ -105,17 +117,29 @@ export default function PatientDetailsScreen() {
       [
         {
           text: isEnglish ? 'Cancel' : BengaliText.CANCEL,
-          style: 'cancel'
+          style: 'cancel',
+          onPress: () => console.log('Delete cancelled')
         },
         {
           text: isEnglish ? 'Delete' : BengaliText.DELETE_PATIENT,
           style: 'destructive',
           onPress: async () => {
             try {
+              console.log('Delete confirmed for patient ID:', id);
               setLoading(true);
-              const result = await deletePatient(id);
+
+              // Get the patient ID from the patient object if available
+              // This ensures we're using the correct ID format
+              const patientIdToDelete = patient?.id || id;
+              console.log('Using patient ID for deletion:', patientIdToDelete);
+
+              // Call the deletePatient function with the patient ID
+              console.log('Calling deletePatient with ID:', patientIdToDelete);
+              const result = await deletePatient(patientIdToDelete);
+              console.log('Delete result:', result);
 
               if (result.success) {
+                console.log('Patient deleted successfully');
                 // Show success message
                 Alert.alert(
                   isEnglish ? 'Success' : BengaliText.CONFIRM,
@@ -124,6 +148,7 @@ export default function PatientDetailsScreen() {
                     {
                       text: 'OK',
                       onPress: () => {
+                        console.log('Navigating back after successful deletion');
                         // Navigate back to the previous screen
                         router.back();
                       }
@@ -131,6 +156,7 @@ export default function PatientDetailsScreen() {
                   ]
                 );
               } else {
+                console.error('Failed to delete patient:', result.error);
                 // Show error message
                 Alert.alert(
                   isEnglish ? 'Error' : BengaliText.ERROR,
